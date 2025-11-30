@@ -1,7 +1,39 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
+import {
+  MessageSquare,
+  Link2,
+  CalendarCheck,
+  TrendingUp,
+  Calendar,
+  XCircle,
+  RefreshCw,
+  Clock,
+  Users,
+  ArrowUpRight,
+  ArrowDownRight,
+  Activity,
+  Bot,
+  CheckCircle2,
+  AlertCircle,
+  Download,
+} from 'lucide-react';
+import clsx from 'clsx';
 
 interface Stats {
   totalChats: number;
@@ -24,16 +56,10 @@ interface Stats {
 
 interface N8nMetrics {
   period: string;
-  filterStart: string;
-  filterEnd: string;
   totalExecutions: number;
   successfulExecutions: number;
   failedExecutions: number;
   successRate: string;
-  totalExecutions7Days: number;
-  successRate7Days: string;
-  totalExecutions30Days: number;
-  successRate30Days: string;
   executionsByDay: { date: string; success: number; error: number }[];
   executionsByMonth: { month: string; success: number; error: number }[];
   recentExecutions: {
@@ -45,60 +71,93 @@ interface N8nMetrics {
   totalExecutionsAllTime: number;
 }
 
-interface SupabaseMetrics {
-  totalMessages: number;
-  humanMessages: number;
-  aiMessages: number;
-  uniqueConversations: number;
-  avgMessagesPerConversation: string;
+interface ServiceMetric {
+  service: string;
+  consultations: number;
+  linksSent: number;
+  bookingsConfirmed: number;
+  conversionRate: number;
+}
+
+interface ServiceMetricsData {
+  services: ServiceMetric[];
+  totals: {
+    totalConsultations: number;
+    totalLinksSent: number;
+    totalBookings: number;
+    uniqueServices: number;
+    totalConversations?: number;
+    conversationsWithCalLink?: number;
+    totalCalcomBookings?: number;
+  };
+  calcomStats?: {
+    totalBookings: number;
+    matchedBookings: number;
+    overallConversionRate: number;
+  };
+  source?: string;
   lastUpdated: string;
 }
 
-function StatCard({
+// KPI Card Component
+function KPICard({
   title,
   value,
   subtitle,
-  color,
-  icon
+  icon: Icon,
+  trend,
+  trendValue,
+  color = 'blue',
 }: {
   title: string;
   value: string | number;
   subtitle?: string;
-  color: string;
-  icon: string;
+  icon: React.ElementType;
+  trend?: 'up' | 'down' | 'neutral';
+  trendValue?: string;
+  color?: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'cyan';
 }) {
-  const colorClasses: Record<string, string> = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    orange: 'bg-orange-500',
-    purple: 'bg-purple-500',
-    red: 'bg-red-500',
-    cyan: 'bg-cyan-500',
-    pink: 'bg-pink-500',
+  const colorStyles = {
+    blue: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400',
+    green: 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400',
+    purple: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400',
+    orange: 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400',
+    red: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400',
+    cyan: 'bg-cyan-50 text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-400',
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-500 text-sm font-medium">{title}</p>
-          <p className="text-3xl font-bold text-gray-800 mt-1">{value}</p>
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 hover:shadow-lg transition-shadow">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{value}</p>
           {subtitle && (
-            <p className="text-gray-400 text-xs mt-1">{subtitle}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{subtitle}</p>
+          )}
+          {trend && trendValue && (
+            <div className={clsx(
+              'flex items-center gap-1 mt-2 text-xs font-medium',
+              trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-500'
+            )}>
+              {trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              <span>{trendValue}</span>
+            </div>
           )}
         </div>
-        <div className={`${colorClasses[color]} p-4 rounded-xl`}>
-          <span className="text-2xl">{icon}</span>
+        <div className={clsx('p-3 rounded-lg', colorStyles[color])}>
+          <Icon className="w-5 h-5" />
         </div>
       </div>
     </div>
   );
 }
 
+// Upcoming Bookings Component
 function UpcomingBookings({ bookings }: { bookings: Stats['recentUpcoming'] }) {
   if (!bookings || bookings.length === 0) {
     return (
-      <div className="text-gray-500 text-center py-8">
+      <div className="text-gray-500 dark:text-gray-400 text-center py-8">
         No hay citas programadas
       </div>
     );
@@ -109,24 +168,23 @@ function UpcomingBookings({ bookings }: { bookings: Stats['recentUpcoming'] }) {
       {bookings.map((booking, index) => (
         <div
           key={index}
-          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+          className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors"
         >
           <div className="flex items-center gap-4">
-            <div className="bg-blue-100 text-blue-600 p-3 rounded-lg">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+            <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2.5 rounded-lg">
+              <Calendar className="w-4 h-4" />
             </div>
             <div>
-              <p className="font-semibold text-gray-800">{booking.attendee}</p>
-              <p className="text-sm text-gray-500">{booking.date} - {booking.time}</p>
+              <p className="font-medium text-gray-900 dark:text-white text-sm">{booking.attendee}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{booking.date} - {booking.time}</p>
             </div>
           </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+          <span className={clsx(
+            'px-2.5 py-1 rounded-full text-xs font-medium',
             booking.status === 'Reagendado'
-              ? 'bg-orange-100 text-orange-600'
-              : 'bg-green-100 text-green-600'
-          }`}>
+              ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'
+              : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+          )}>
             {booking.status}
           </span>
         </div>
@@ -142,44 +200,36 @@ const MONTHS = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
+const CHART_COLORS = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#06B6D4'];
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [n8nMetrics, setN8nMetrics] = useState<N8nMetrics | null>(null);
-  const [supabaseMetrics, setSupabaseMetrics] = useState<SupabaseMetrics | null>(null);
+  const [serviceMetrics, setServiceMetrics] = useState<ServiceMetricsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Filter states
+  const [refreshing, setRefreshing] = useState(false);
+  const [nextRefresh, setNextRefresh] = useState<number>(REFRESH_INTERVAL_MS / 1000);
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('7days');
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const [filterMonth, setFilterMonth] = useState<string>((new Date().getMonth() + 1).toString());
   const [n8nLoading, setN8nLoading] = useState(false);
 
-  // Fetch n8n metrics and stats with filters
   const fetchFilteredData = async (period: FilterPeriod, year?: string, month?: string) => {
     setN8nLoading(true);
     try {
       const params = new URLSearchParams({ period });
-      if (year && (period === 'year' || period === 'month')) {
-        params.set('year', year);
-      }
-      if (month && period === 'month') {
-        params.set('month', month);
-      }
+      if (year && (period === 'year' || period === 'month')) params.set('year', year);
+      if (month && period === 'month') params.set('month', month);
 
       const [n8nRes, statsRes] = await Promise.all([
         fetch(`/api/n8n-metrics?${params.toString()}`),
         fetch(`/api/stats?${params.toString()}`)
       ]);
 
-      if (n8nRes.ok) {
-        const data = await n8nRes.json();
-        setN8nMetrics(data);
-      }
-      if (statsRes.ok) {
-        const data = await statsRes.json();
-        setStats(data);
-      }
+      if (n8nRes.ok) setN8nMetrics(await n8nRes.json());
+      if (statsRes.ok) setStats(await statsRes.json());
     } catch (err) {
       console.error('Error fetching filtered data:', err);
     } finally {
@@ -187,7 +237,6 @@ export default function Dashboard() {
     }
   };
 
-  // Handle filter change
   const handleFilterChange = (period: FilterPeriod) => {
     setFilterPeriod(period);
     fetchFilteredData(period, filterYear, filterMonth);
@@ -207,46 +256,61 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        const [statsRes, n8nRes, supabaseRes] = await Promise.all([
-          fetch('/api/stats'),
-          fetch('/api/n8n-metrics?period=7days'),
-          fetch('/api/supabase-messages')
-        ]);
+  const fetchStats = async (isManual = false) => {
+    if (isManual) setRefreshing(true);
+    try {
+      const [statsRes, n8nRes, serviceRes] = await Promise.all([
+        fetch('/api/stats'),
+        fetch('/api/n8n-metrics?period=7days'),
+        fetch('/api/service-metrics')
+      ]);
 
-        if (!statsRes.ok) throw new Error('Error fetching stats');
-        const statsData = await statsRes.json();
-        setStats(statsData);
-
-        if (n8nRes.ok) {
-          const n8nData = await n8nRes.json();
-          setN8nMetrics(n8nData);
-        }
-
-        if (supabaseRes.ok) {
-          const supabaseData = await supabaseRes.json();
-          setSupabaseMetrics(supabaseData);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido');
-      } finally {
-        setLoading(false);
-      }
+      if (!statsRes.ok) throw new Error('Error fetching stats');
+      setStats(await statsRes.json());
+      if (n8nRes.ok) setN8nMetrics(await n8nRes.json());
+      if (serviceRes.ok) setServiceMetrics(await serviceRes.json());
+      setNextRefresh(REFRESH_INTERVAL_MS / 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
+  };
 
+  const handleExportCSV = () => {
+    if (!serviceMetrics) return;
+    const headers = ['Servicio', 'Consultas', 'Enlaces Enviados', 'Citas Confirmadas', 'Tasa de Conversion'];
+    const rows = serviceMetrics.services.map(s => [
+      s.service, s.consultations, s.linksSent, s.bookingsConfirmed, `${s.conversionRate}%`
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `servicios-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  };
+
+  useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, 5 * 60 * 1000);
-    return () => clearInterval(interval);
+    const dataInterval = setInterval(() => fetchStats(), REFRESH_INTERVAL_MS);
+    const countdownInterval = setInterval(() => {
+      setNextRefresh(prev => (prev > 0 ? prev - 1 : REFRESH_INTERVAL_MS / 1000));
+    }, 1000);
+    return () => {
+      clearInterval(dataInterval);
+      clearInterval(countdownInterval);
+    };
   }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-50 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando datos...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando datos...</p>
         </div>
       </div>
     );
@@ -254,389 +318,395 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="text-red-500 text-5xl mb-4">!</div>
-          <p className="text-gray-800 font-semibold">Error al cargar datos</p>
-          <p className="text-gray-500 mt-2">{error}</p>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-8 text-center max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-gray-900 dark:text-white font-semibold">Error al cargar datos</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">{error}</p>
+          <button
+            onClick={() => fetchStats(true)}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600"
+          >
+            Reintentar
+          </button>
         </div>
       </div>
     );
   }
 
+  // Prepare chart data
+  const chartData = n8nMetrics?.executionsByDay.map(d => ({
+    date: new Date(d.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
+    exitosos: d.success,
+    errores: d.error,
+    total: d.success + d.error,
+  })) || [];
+
+  const funnelData = serviceMetrics ? [
+    { name: 'Conversaciones', value: serviceMetrics.totals.totalConversations || 0 },
+    { name: 'Enlaces Enviados', value: serviceMetrics.totals.conversationsWithCalLink || 0 },
+    { name: 'Citas Confirmadas', value: serviceMetrics.calcomStats?.totalBookings || 0 },
+  ] : [];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                Dashboard Dr. Arnaldo Lopez
-              </h1>
-              <p className="text-gray-500 text-sm mt-1">
-                Agente de WhatsApp - Metricas en tiempo real
-              </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Vista General
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Metricas del agente de WhatsApp en tiempo real
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExportCSV}
+            disabled={!serviceMetrics}
+            className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-750"
+          >
+            <Download className="w-4 h-4" />
+            Exportar
+          </button>
+          <button
+            onClick={() => fetchStats(true)}
+            disabled={refreshing}
+            className={clsx(
+              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+              refreshing
+                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            )}
+          >
+            <RefreshCw className={clsx('w-4 h-4', refreshing && 'animate-spin')} />
+            {refreshing ? 'Actualizando...' : 'Actualizar'}
+          </button>
+          <div className="text-right hidden sm:block">
+            <p className="text-xs text-gray-400">Proxima actualizacion</p>
+            <p className="text-sm font-mono text-gray-600 dark:text-gray-300">
+              {Math.floor(nextRefresh / 60)}:{(nextRefresh % 60).toString().padStart(2, '0')}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPICard
+          title="Chats Respondidos"
+          value={stats?.totalChats || 0}
+          subtitle="Clientes atendidos"
+          icon={MessageSquare}
+          color="blue"
+        />
+        <KPICard
+          title="Enlaces Enviados"
+          value={stats?.linksSent || 0}
+          subtitle="Cal.com links"
+          icon={Link2}
+          color="purple"
+        />
+        <KPICard
+          title="Citas Confirmadas"
+          value={stats?.confirmedBookings || 0}
+          subtitle={`${stats?.upcomingBookings || 0} proximas`}
+          icon={CalendarCheck}
+          color="green"
+        />
+        <KPICard
+          title="Tasa de Conversion"
+          value={stats?.bookingRate || '0%'}
+          subtitle="Enlaces a citas"
+          icon={TrendingUp}
+          color="cyan"
+        />
+      </div>
+
+      {/* Secondary KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KPICard
+          title="Citas Proximas"
+          value={stats?.upcomingBookings || 0}
+          subtitle="Programadas"
+          icon={Calendar}
+          color="blue"
+        />
+        <KPICard
+          title="Cancelaciones"
+          value={stats?.cancelledBookings || 0}
+          subtitle={`Tasa: ${stats?.cancelRate || '0%'}`}
+          icon={XCircle}
+          color="red"
+        />
+        <KPICard
+          title="Reagendadas"
+          value={stats?.rescheduledBookings || 0}
+          subtitle="Reprogramadas"
+          icon={RefreshCw}
+          color="orange"
+        />
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Activity Chart */}
+        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900 dark:text-white">Actividad del Agente</h3>
+            <div className="flex items-center gap-1">
+              {['7days', '30days'].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => handleFilterChange(p as FilterPeriod)}
+                  disabled={n8nLoading}
+                  className={clsx(
+                    'px-3 py-1 rounded-lg text-xs font-medium transition-colors',
+                    filterPeriod === p
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  )}
+                >
+                  {p === '7days' ? '7 dias' : '30 dias'}
+                </button>
+              ))}
             </div>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/citas"
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
-              >
-                Gestionar Citas
-              </Link>
-              <div className="text-right">
-                <p className="text-xs text-gray-400">Ultima actualizacion</p>
-                <p className="text-sm text-gray-600">
-                  {stats?.lastUpdated
-                    ? new Date(stats.lastUpdated).toLocaleString('es-ES')
-                    : '-'}
-                </p>
-              </div>
+          </div>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorSuccess" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9CA3AF" />
+                <YAxis tick={{ fontSize: 11 }} stroke="#9CA3AF" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="exitosos"
+                  stroke="#10B981"
+                  fillOpacity={1}
+                  fill="url(#colorSuccess)"
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="errores"
+                  stroke="#EF4444"
+                  fill="transparent"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[250px] flex items-center justify-center text-gray-400">
+              No hay datos disponibles
+            </div>
+          )}
+          <div className="flex items-center justify-center gap-6 mt-4">
+            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+              <div className="w-3 h-3 bg-green-500 rounded" />
+              Exitosos
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+              <div className="w-3 h-3 border-2 border-red-500 border-dashed rounded" />
+              Errores
             </div>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Chats Respondidos"
-            value={stats?.totalChats || 0}
-            subtitle="Total de clientes atendidos"
-            color="blue"
-            icon="💬"
-          />
-          <StatCard
-            title="Enlaces de Cita Enviados"
-            value={stats?.linksSent || 0}
-            subtitle="Cal.com links compartidos"
-            color="purple"
-            icon="🔗"
-          />
-          <StatCard
-            title="Citas Confirmadas"
-            value={stats?.confirmedBookings || 0}
-            subtitle={`${stats?.upcomingBookings || 0} proximas, ${stats?.pastBookings || 0} completadas`}
-            color="green"
-            icon="✅"
-          />
-          <StatCard
-            title="Tasa de Conversion"
-            value={stats?.bookingRate || '0%'}
-            subtitle="Enlaces -> Citas"
-            color="cyan"
-            icon="📈"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <StatCard
-            title="Citas Proximas"
-            value={stats?.upcomingBookings || 0}
-            subtitle="Programadas"
-            color="blue"
-            icon="📅"
-          />
-          <StatCard
-            title="Citas Canceladas"
-            value={stats?.cancelledBookings || 0}
-            subtitle={`Tasa: ${stats?.cancelRate || '0%'}`}
-            color="red"
-            icon="❌"
-          />
-          <StatCard
-            title="Citas Reagendadas"
-            value={stats?.rescheduledBookings || 0}
-            subtitle="Reprogramadas por el cliente"
-            color="orange"
-            icon="🔄"
-          />
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
-            Proximas Citas
-          </h2>
-          <UpcomingBookings bookings={stats?.recentUpcoming || []} />
-        </div>
-
-        {/* n8n Agent Metrics */}
-        {n8nMetrics && (
-          <div className="mt-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
-              <h2 className="text-xl font-bold text-gray-800">
-                Actividad del Agente de WhatsApp
-              </h2>
-
-              {/* Filter Controls */}
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Period buttons */}
-                <div className="flex flex-wrap gap-1">
-                  {[
-                    { value: '7days', label: '7 dias' },
-                    { value: '30days', label: '30 dias' },
-                    { value: '90days', label: '90 dias' },
-                    { value: 'month', label: 'Mes' },
-                    { value: 'year', label: 'Año' },
-                    { value: 'all', label: 'Todo' },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => handleFilterChange(option.value as FilterPeriod)}
-                      disabled={n8nLoading}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                        filterPeriod === option.value
-                          ? 'bg-purple-500 text-white'
-                          : 'bg-white text-gray-600 hover:bg-gray-100'
-                      } ${n8nLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Year selector */}
-                {(filterPeriod === 'year' || filterPeriod === 'month') && (
-                  <select
-                    value={filterYear}
-                    onChange={(e) => handleYearChange(e.target.value)}
-                    disabled={n8nLoading}
-                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  >
-                    {[2025, 2024, 2023].map((y) => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                )}
-
-                {/* Month selector */}
-                {filterPeriod === 'month' && (
-                  <select
-                    value={filterMonth}
-                    onChange={(e) => handleMonthChange(e.target.value)}
-                    disabled={n8nLoading}
-                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  >
-                    {MONTHS.map((m, i) => (
-                      <option key={i + 1} value={i + 1}>{m}</option>
-                    ))}
-                  </select>
-                )}
-
-                {n8nLoading && (
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-purple-500"></div>
-                )}
-              </div>
-            </div>
-
-            {/* Filtered period label */}
-            <p className="text-sm text-gray-500 mb-4">
-              Mostrando datos: {' '}
-              {filterPeriod === '7days' && 'Ultimos 7 dias'}
-              {filterPeriod === '30days' && 'Ultimos 30 dias'}
-              {filterPeriod === '90days' && 'Ultimos 90 dias'}
-              {filterPeriod === 'month' && `${MONTHS[parseInt(filterMonth) - 1]} ${filterYear}`}
-              {filterPeriod === 'year' && `Año ${filterYear}`}
-              {filterPeriod === 'all' && 'Todo el historial'}
-              {' '}({n8nMetrics.totalExecutions} ejecuciones)
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-              <StatCard
-                title="Total Procesados"
-                value={n8nMetrics.totalExecutions}
-                subtitle={`${n8nMetrics.successRate}% exitosos`}
-                color="purple"
-                icon="🤖"
-              />
-              <StatCard
-                title="Exitosos"
-                value={n8nMetrics.successfulExecutions}
-                subtitle="Conversaciones completadas"
-                color="green"
-                icon="✓"
-              />
-              <StatCard
-                title="Errores"
-                value={n8nMetrics.failedExecutions}
-                subtitle="Requieren atencion"
-                color="red"
-                icon="⚠"
-              />
-              <StatCard
-                title="Total Historico"
-                value={n8nMetrics.totalExecutionsAllTime}
-                subtitle="Desde el inicio"
-                color="cyan"
-                icon="📊"
-              />
-            </div>
-
-            {/* Chart - Executions by day/month */}
-            {(n8nMetrics.executionsByDay.length > 0 || n8nMetrics.executionsByMonth.length > 0) && (
-              <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Actividad {filterPeriod === 'year' || filterPeriod === 'all' ? 'por Mes' : 'por Dia'}
-                </h3>
-                <div className="overflow-x-auto pb-4">
-                  <div className="flex items-end gap-2 min-w-max" style={{ minHeight: '180px' }}>
-                    {(filterPeriod === 'year' || filterPeriod === 'all'
-                      ? n8nMetrics.executionsByMonth
-                      : n8nMetrics.executionsByDay
-                    ).map((item, index) => {
-                      const total = 'success' in item ? item.success + item.error : 0;
-                      const maxHeight = 120;
-                      const maxTotal = Math.max(
-                        ...(filterPeriod === 'year' || filterPeriod === 'all'
-                          ? n8nMetrics.executionsByMonth
-                          : n8nMetrics.executionsByDay
-                        ).map((d) => d.success + d.error)
-                      );
-                      const height = maxTotal > 0 ? (total / maxTotal) * maxHeight : 0;
-                      const successHeight = maxTotal > 0 ? (item.success / maxTotal) * maxHeight : 0;
-
-                      const label = 'date' in item
-                        ? new Date(item.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
-                        : MONTHS[parseInt(item.month.split('-')[1]) - 1]?.substring(0, 3);
-
-                      return (
-                        <div key={index} className="flex flex-col items-center min-w-[50px]">
-                          {/* Value on top */}
-                          <span className="text-xs font-semibold text-gray-700 mb-1">{total}</span>
-                          {/* Bar */}
-                          <div className="relative" style={{ height: maxHeight }}>
-                            <div
-                              className="w-10 bg-red-200 rounded-t absolute bottom-0"
-                              style={{ height: `${Math.max(height, 4)}px` }}
-                            />
-                            <div
-                              className="w-10 bg-green-400 rounded-t absolute bottom-0"
-                              style={{ height: `${Math.max(successHeight, 2)}px` }}
-                            />
-                          </div>
-                          {/* Label below */}
-                          <span className="text-xs text-gray-600 mt-2 text-center font-medium">
-                            {label}
-                          </span>
-                        </div>
-                      );
-                    })}
+        {/* Funnel Visualization */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Embudo de Conversion</h3>
+          <div className="space-y-3">
+            {funnelData.map((item, index) => {
+              const maxValue = funnelData[0]?.value || 1;
+              const percentage = maxValue > 0 ? Math.round((item.value / maxValue) * 100) : 0;
+              return (
+                <div key={item.name}>
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-gray-600 dark:text-gray-400">{item.name}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{item.value}</span>
                   </div>
-                </div>
-                <div className="flex items-center gap-4 mt-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-400 rounded" />
-                    <span className="text-gray-600">Exitosos</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-200 rounded" />
-                    <span className="text-gray-600">Errores</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Recent Executions */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Ultimas Ejecuciones del Agente
-              </h3>
-              {n8nMetrics.recentExecutions.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No hay ejecuciones en este periodo</p>
-              ) : (
-                <div className="space-y-2">
-                  {n8nMetrics.recentExecutions.slice(0, 5).map((exec) => (
+                  <div className="h-8 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
                     <div
-                      key={exec.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`w-3 h-3 rounded-full ${
-                            exec.status === 'success'
-                              ? 'bg-green-500'
-                              : 'bg-red-500'
-                          }`}
-                        />
-                        <span className="text-sm text-gray-600">
-                          {new Date(exec.startedAt).toLocaleString('es-ES', {
-                            day: '2-digit',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        {exec.duration !== null && (
-                          <span className="text-xs text-gray-400">
-                            {exec.duration}s
-                          </span>
+                      className="h-full rounded-lg transition-all duration-500"
+                      style={{
+                        width: `${percentage}%`,
+                        backgroundColor: CHART_COLORS[index],
+                      }}
+                    />
+                  </div>
+                  {index < funnelData.length - 1 && funnelData[index + 1] && (
+                    <p className="text-xs text-gray-400 mt-1 text-right">
+                      {funnelData[index + 1].value > 0 && item.value > 0
+                        ? `${Math.round((funnelData[index + 1].value / item.value) * 100)}% conversion`
+                        : ''}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {serviceMetrics?.calcomStats && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">Conversion Total</span>
+                <span className="text-lg font-bold text-green-600">
+                  {serviceMetrics.calcomStats.overallConversionRate}%
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Services & Upcoming Bookings */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Services */}
+        {serviceMetrics && serviceMetrics.services.length > 0 && (
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900 dark:text-white">Servicios Mas Consultados</h3>
+              <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                Top 5
+              </span>
+            </div>
+            <div className="space-y-4">
+              {serviceMetrics.services.slice(0, 5).map((service, index) => {
+                const maxConsultations = serviceMetrics.services[0]?.consultations || 1;
+                const width = (service.consultations / maxConsultations) * 100;
+                return (
+                  <div key={service.service}>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">{service.service}</span>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-gray-500">{service.consultations} consultas</span>
+                        {service.conversionRate > 0 && (
+                          <span className="text-green-600 font-semibold">{service.conversionRate}%</span>
                         )}
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            exec.status === 'success'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}
-                        >
-                          {exec.status === 'success' ? 'Exitoso' : 'Error'}
-                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${width}%`,
+                          backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Supabase Messages Metrics */}
-        {supabaseMetrics && (
-          <div className="mt-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">
-              Mensajes del Bot (Supabase)
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard
-                title="Total Mensajes"
-                value={supabaseMetrics.totalMessages}
-                subtitle="Todos los mensajes registrados"
-                color="purple"
-                icon="💬"
-              />
-              <StatCard
-                title="Mensajes de Usuarios"
-                value={supabaseMetrics.humanMessages}
-                subtitle="Mensajes enviados por clientes"
-                color="blue"
-                icon="👤"
-              />
-              <StatCard
-                title="Respuestas del Bot"
-                value={supabaseMetrics.aiMessages}
-                subtitle="Mensajes generados por el AI"
-                color="green"
-                icon="🤖"
-              />
-              <StatCard
-                title="Conversaciones Unicas"
-                value={supabaseMetrics.uniqueConversations}
-                subtitle={`Prom. ${supabaseMetrics.avgMessagesPerConversation} msgs/conv`}
-                color="cyan"
-                icon="💭"
-              />
-            </div>
+        {/* Upcoming Bookings */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900 dark:text-white">Proximas Citas</h3>
+            <Clock className="w-4 h-4 text-gray-400" />
           </div>
-        )}
+          <UpcomingBookings bookings={stats?.recentUpcoming || []} />
+        </div>
+      </div>
 
-        <footer className="mt-8 text-center text-gray-500 text-sm">
-          <p>Dashboard creado por Henoc Marketing</p>
-          <p className="mt-1">
-            Datos de Cal.com, Airtable y Supabase actualizados automaticamente
-          </p>
-        </footer>
-      </main>
+      {/* Agent Activity */}
+      {n8nMetrics && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KPICard
+            title="Total Procesados"
+            value={n8nMetrics.totalExecutions}
+            subtitle={`${n8nMetrics.successRate}% exitosos`}
+            icon={Bot}
+            color="purple"
+          />
+          <KPICard
+            title="Exitosos"
+            value={n8nMetrics.successfulExecutions}
+            subtitle="Completados"
+            icon={CheckCircle2}
+            color="green"
+          />
+          <KPICard
+            title="Errores"
+            value={n8nMetrics.failedExecutions}
+            subtitle="Requieren atencion"
+            icon={AlertCircle}
+            color="red"
+          />
+          <KPICard
+            title="Total Historico"
+            value={n8nMetrics.totalExecutionsAllTime}
+            subtitle="Desde el inicio"
+            icon={Activity}
+            color="cyan"
+          />
+        </div>
+      )}
+
+      {/* Recent Executions */}
+      {n8nMetrics && n8nMetrics.recentExecutions.length > 0 && (
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Ultimas Ejecuciones</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                  <th className="pb-3 font-medium">Estado</th>
+                  <th className="pb-3 font-medium">Fecha</th>
+                  <th className="pb-3 font-medium">Duracion</th>
+                </tr>
+              </thead>
+              <tbody>
+                {n8nMetrics.recentExecutions.slice(0, 5).map((exec) => (
+                  <tr key={exec.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
+                    <td className="py-3">
+                      <span className={clsx(
+                        'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium',
+                        exec.status === 'success'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                      )}>
+                        <span className={clsx(
+                          'w-1.5 h-1.5 rounded-full',
+                          exec.status === 'success' ? 'bg-green-500' : 'bg-red-500'
+                        )} />
+                        {exec.status === 'success' ? 'Exitoso' : 'Error'}
+                      </span>
+                    </td>
+                    <td className="py-3 text-sm text-gray-600 dark:text-gray-400">
+                      {new Date(exec.startedAt).toLocaleString('es-ES', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </td>
+                    <td className="py-3 text-sm text-gray-500 dark:text-gray-500">
+                      {exec.duration !== null ? `${exec.duration}s` : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

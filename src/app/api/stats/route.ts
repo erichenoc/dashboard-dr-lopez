@@ -23,6 +23,15 @@ interface AirtableRecord {
   };
 }
 
+interface SupabaseMessage {
+  id: number;
+  session_id: string;
+  message: {
+    type: 'human' | 'ai';
+    content: string;
+  };
+}
+
 function getDateRange(period: string, year?: string, month?: string): { start: Date; end: Date } {
   const now = new Date();
   const end = new Date(now);
@@ -96,6 +105,73 @@ async function getCalcomBookings(status: string) {
   return data.bookings || [];
 }
 
+// Fetch unique conversations from Supabase
+async function getSupabaseConversations(): Promise<{ totalConversations: number; conversationsWithCalLink: number }> {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return { totalConversations: 0, conversationsWithCalLink: 0 };
+  }
+
+  const allMessages: SupabaseMessage[] = [];
+  const pageSize = 1000;
+  let offset = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/n8n_chat_histories?select=*&order=id.asc&limit=${pageSize}&offset=${offset}`,
+      {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        next: { revalidate: 60 }
+      }
+    );
+
+    if (!response.ok) break;
+
+    const data: SupabaseMessage[] = await response.json();
+    allMessages.push(...data);
+
+    if (data.length < pageSize) {
+      hasMore = false;
+    } else {
+      offset += pageSize;
+    }
+  }
+
+  // Count unique sessions
+  const sessions = new Map<string, { hasCalLink: boolean }>();
+
+  for (const msg of allMessages) {
+    const sessionId = msg.session_id;
+
+    // Skip Eric Henoc test data
+    if (sessionId.startsWith('14078729969')) continue;
+
+    if (!sessions.has(sessionId)) {
+      sessions.set(sessionId, { hasCalLink: false });
+    }
+
+    // Check for Cal.com link in AI messages
+    if (msg.message?.type === 'ai' && msg.message?.content) {
+      if (msg.message.content.includes('cal.com/')) {
+        sessions.get(sessionId)!.hasCalLink = true;
+      }
+    }
+  }
+
+  const conversationsWithCalLink = Array.from(sessions.values()).filter(s => s.hasCalLink).length;
+
+  return {
+    totalConversations: sessions.size,
+    conversationsWithCalLink
+  };
+}
+
 async function getAirtableRecords() {
   const baseId = process.env.AIRTABLE_BASE_ID;
   const tableName = encodeURIComponent(process.env.AIRTABLE_TABLE_NAME || 'Datos de Clientes');
@@ -145,19 +221,18 @@ export async function GET(request: NextRequest) {
       upcomingBookings,
       pastBookings,
       cancelledBookings,
-      airtableRecords
+      airtableRecords,
+      supabaseData
     ] = await Promise.all([
       getCalcomBookings('upcoming'),
       getCalcomBookings('past'),
       getCalcomBookings('cancelled'),
-      getAirtableRecords()
+      getAirtableRecords(),
+      getSupabaseConversations()
     ]);
 
-    // Filter Airtable records by date
-    const filteredAirtableRecords = airtableRecords.filter((r: AirtableRecord) => {
-      const recordDate = new Date(r.createdTime);
-      return recordDate >= filterStart && recordDate <= filterEnd;
-    });
+    // Note: airtableRecords is fetched but no longer used for chat count (using Supabase instead)
+    void airtableRecords; // Suppress unused variable warning
 
     // Count rescheduled bookings (from cancelled that have rescheduled flag)
     const rescheduledCount = cancelledBookings.filter(
@@ -167,13 +242,9 @@ export async function GET(request: NextRequest) {
     // Count pure cancellations (cancelled without reschedule)
     const pureCancelledCount = cancelledBookings.length - rescheduledCount;
 
-    // Count links sent from Airtable (filtered by date)
-    const linksSentCount = filteredAirtableRecords.filter(
-      (r: AirtableRecord) => r.fields.Enlace_Cita_Enviado === true
-    ).length;
-
-    // Total chats (filtered Airtable records)
-    const totalChats = filteredAirtableRecords.length;
+    // Use Supabase as the source of truth for conversations and links sent
+    const totalChats = supabaseData.totalConversations;
+    const linksSentCount = supabaseData.conversationsWithCalLink;
 
     // Calculate conversion rates
     const totalConfirmed = upcomingBookings.length + pastBookings.length;

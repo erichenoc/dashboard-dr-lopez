@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 
-interface ChatHistoryRecord {
-  id: number;
-  session_id: string;
-  message: {
-    type: 'human' | 'ai';
-    content: string;
-    additional_kwargs?: Record<string, unknown>;
-  };
+interface ChatMetrics {
+  totalMessages: number;
+  humanMessages: number;
+  aiMessages: number;
+  aiMessagesWithCalLink: number;
+  uniqueConversations: number;
+  avgMessagesPerConversation: number;
 }
 
 export async function GET() {
@@ -22,51 +21,35 @@ export async function GET() {
       );
     }
 
-    // Fetch all chat history records from Supabase
+    // Call the RPC function to get all metrics efficiently
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/n8n_chat_histories?select=id,session_id,message`,
+      `${supabaseUrl}/rest/v1/rpc/get_chat_metrics`,
       {
+        method: 'POST',
         headers: {
           'apikey': supabaseKey,
           'Authorization': `Bearer ${supabaseKey}`,
           'Content-Type': 'application/json',
         },
+        body: '{}',
         next: { revalidate: 60 }
       }
     );
 
     if (!response.ok) {
-      console.error('Supabase API error:', await response.text());
+      console.error('Supabase RPC error:', await response.text());
       return NextResponse.json(
         { error: 'Error fetching Supabase data' },
         { status: response.status }
       );
     }
 
-    const records: ChatHistoryRecord[] = await response.json();
+    const metrics: ChatMetrics = await response.json();
 
-    // Count messages by type
-    const humanMessages = records.filter(r => r.message?.type === 'human');
-    const aiMessages = records.filter(r => r.message?.type === 'ai');
-
-    // Count unique sessions (conversations)
-    const uniqueSessions = new Set(records.map(r => r.session_id));
-
-    // Calculate average messages per conversation
-    const avgMessagesPerConversation = uniqueSessions.size > 0
-      ? (records.length / uniqueSessions.size).toFixed(1)
-      : '0';
-
-    const metrics = {
-      totalMessages: records.length,
-      humanMessages: humanMessages.length,
-      aiMessages: aiMessages.length,
-      uniqueConversations: uniqueSessions.size,
-      avgMessagesPerConversation,
+    return NextResponse.json({
+      ...metrics,
       lastUpdated: new Date().toISOString(),
-    };
-
-    return NextResponse.json(metrics);
+    });
   } catch (error) {
     console.error('Error fetching Supabase messages:', error);
     return NextResponse.json(
