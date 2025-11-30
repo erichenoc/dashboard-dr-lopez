@@ -454,14 +454,14 @@ export default function Dashboard() {
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">
                   Actividad {filterPeriod === 'year' || filterPeriod === 'all' ? 'por Mes' : 'por Dia'}
                 </h3>
-                <div className="overflow-x-auto">
-                  <div className="flex items-end gap-1 min-w-max h-32">
+                <div className="overflow-x-auto pb-4">
+                  <div className="flex items-end gap-2 min-w-max" style={{ minHeight: '180px' }}>
                     {(filterPeriod === 'year' || filterPeriod === 'all'
                       ? n8nMetrics.executionsByMonth
                       : n8nMetrics.executionsByDay
                     ).map((item, index) => {
                       const total = 'success' in item ? item.success + item.error : 0;
-                      const maxHeight = 100;
+                      const maxHeight = 120;
                       const maxTotal = Math.max(
                         ...(filterPeriod === 'year' || filterPeriod === 'all'
                           ? n8nMetrics.executionsByMonth
@@ -476,18 +476,22 @@ export default function Dashboard() {
                         : MONTHS[parseInt(item.month.split('-')[1]) - 1]?.substring(0, 3);
 
                       return (
-                        <div key={index} className="flex flex-col items-center">
+                        <div key={index} className="flex flex-col items-center min-w-[50px]">
+                          {/* Value on top */}
+                          <span className="text-xs font-semibold text-gray-700 mb-1">{total}</span>
+                          {/* Bar */}
                           <div className="relative" style={{ height: maxHeight }}>
                             <div
-                              className="w-8 bg-red-200 rounded-t absolute bottom-0"
-                              style={{ height: `${height}px` }}
+                              className="w-10 bg-red-200 rounded-t absolute bottom-0"
+                              style={{ height: `${Math.max(height, 4)}px` }}
                             />
                             <div
-                              className="w-8 bg-green-400 rounded-t absolute bottom-0"
-                              style={{ height: `${successHeight}px` }}
+                              className="w-10 bg-green-400 rounded-t absolute bottom-0"
+                              style={{ height: `${Math.max(successHeight, 2)}px` }}
                             />
                           </div>
-                          <span className="text-xs text-gray-500 mt-1 rotate-45 origin-left whitespace-nowrap">
+                          {/* Label below */}
+                          <span className="text-xs text-gray-600 mt-2 text-center font-medium">
                             {label}
                           </span>
                         </div>
@@ -495,7 +499,7 @@ export default function Dashboard() {
                     })}
                   </div>
                 </div>
-                <div className="flex items-center gap-4 mt-4 text-sm">
+                <div className="flex items-center gap-4 mt-2 text-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-green-400 rounded" />
                     <span className="text-gray-600">Exitosos</span>
