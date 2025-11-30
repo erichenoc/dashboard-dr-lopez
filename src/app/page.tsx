@@ -45,6 +45,15 @@ interface N8nMetrics {
   totalExecutionsAllTime: number;
 }
 
+interface SupabaseMetrics {
+  totalMessages: number;
+  humanMessages: number;
+  aiMessages: number;
+  uniqueConversations: number;
+  avgMessagesPerConversation: string;
+  lastUpdated: string;
+}
+
 function StatCard({
   title,
   value,
@@ -136,6 +145,7 @@ const MONTHS = [
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [n8nMetrics, setN8nMetrics] = useState<N8nMetrics | null>(null);
+  const [supabaseMetrics, setSupabaseMetrics] = useState<SupabaseMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -200,9 +210,10 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [statsRes, n8nRes] = await Promise.all([
+        const [statsRes, n8nRes, supabaseRes] = await Promise.all([
           fetch('/api/stats'),
-          fetch('/api/n8n-metrics?period=7days')
+          fetch('/api/n8n-metrics?period=7days'),
+          fetch('/api/supabase-messages')
         ]);
 
         if (!statsRes.ok) throw new Error('Error fetching stats');
@@ -212,6 +223,11 @@ export default function Dashboard() {
         if (n8nRes.ok) {
           const n8nData = await n8nRes.json();
           setN8nMetrics(n8nData);
+        }
+
+        if (supabaseRes.ok) {
+          const supabaseData = await supabaseRes.json();
+          setSupabaseMetrics(supabaseData);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -575,10 +591,49 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Supabase Messages Metrics */}
+        {supabaseMetrics && (
+          <div className="mt-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              Mensajes del Bot (Supabase)
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatCard
+                title="Total Mensajes"
+                value={supabaseMetrics.totalMessages}
+                subtitle="Todos los mensajes registrados"
+                color="purple"
+                icon="💬"
+              />
+              <StatCard
+                title="Mensajes de Usuarios"
+                value={supabaseMetrics.humanMessages}
+                subtitle="Mensajes enviados por clientes"
+                color="blue"
+                icon="👤"
+              />
+              <StatCard
+                title="Respuestas del Bot"
+                value={supabaseMetrics.aiMessages}
+                subtitle="Mensajes generados por el AI"
+                color="green"
+                icon="🤖"
+              />
+              <StatCard
+                title="Conversaciones Unicas"
+                value={supabaseMetrics.uniqueConversations}
+                subtitle={`Prom. ${supabaseMetrics.avgMessagesPerConversation} msgs/conv`}
+                color="cyan"
+                icon="💭"
+              />
+            </div>
+          </div>
+        )}
+
         <footer className="mt-8 text-center text-gray-500 text-sm">
           <p>Dashboard creado por Henoc Marketing</p>
           <p className="mt-1">
-            Datos de Cal.com y Airtable actualizados automaticamente
+            Datos de Cal.com, Airtable y Supabase actualizados automaticamente
           </p>
         </footer>
       </main>
