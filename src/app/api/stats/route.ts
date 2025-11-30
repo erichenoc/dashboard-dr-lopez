@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 interface CalcomBooking {
   id: number;
@@ -11,14 +12,73 @@ interface CalcomBooking {
 
 interface AirtableRecord {
   id: string;
+  createdTime: string;
   fields: {
     Nombre?: string;
     Teléfono?: string;
     Servicio_Consultado?: string;
     Enlace_Cita_Enviado?: boolean;
-    'Fecha primer contacto'?: string;
+    'Fecha primer contacto\t'?: string;
     'Última actualización'?: string;
   };
+}
+
+function getDateRange(period: string, year?: string, month?: string): { start: Date; end: Date } {
+  const now = new Date();
+  const end = new Date(now);
+
+  switch (period) {
+    case '7days':
+      return {
+        start: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+        end
+      };
+    case '30days':
+      return {
+        start: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+        end
+      };
+    case '90days':
+      return {
+        start: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
+        end
+      };
+    case 'month':
+      if (year && month) {
+        const y = parseInt(year);
+        const m = parseInt(month) - 1;
+        return {
+          start: new Date(y, m, 1),
+          end: new Date(y, m + 1, 0, 23, 59, 59)
+        };
+      }
+      return {
+        start: new Date(now.getFullYear(), now.getMonth(), 1),
+        end
+      };
+    case 'year':
+      if (year) {
+        const y = parseInt(year);
+        return {
+          start: new Date(y, 0, 1),
+          end: new Date(y, 11, 31, 23, 59, 59)
+        };
+      }
+      return {
+        start: new Date(now.getFullYear(), 0, 1),
+        end
+      };
+    case 'all':
+      return {
+        start: new Date(2020, 0, 1),
+        end
+      };
+    default:
+      return {
+        start: new Date(2020, 0, 1),
+        end
+      };
+  }
 }
 
 async function getCalcomBookings(status: string) {
@@ -70,8 +130,16 @@ async function getAirtableRecords() {
   return allRecords;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Get filter parameters
+    const searchParams = request.nextUrl.searchParams;
+    const period = searchParams.get('period') || 'all';
+    const year = searchParams.get('year') || undefined;
+    const month = searchParams.get('month') || undefined;
+
+    const { start: filterStart, end: filterEnd } = getDateRange(period, year, month);
+
     // Fetch all data in parallel
     const [
       upcomingBookings,
@@ -85,6 +153,12 @@ export async function GET() {
       getAirtableRecords()
     ]);
 
+    // Filter Airtable records by date
+    const filteredAirtableRecords = airtableRecords.filter((r: AirtableRecord) => {
+      const recordDate = new Date(r.createdTime);
+      return recordDate >= filterStart && recordDate <= filterEnd;
+    });
+
     // Count rescheduled bookings (from cancelled that have rescheduled flag)
     const rescheduledCount = cancelledBookings.filter(
       (b: CalcomBooking) => b.rescheduled === true
@@ -93,13 +167,13 @@ export async function GET() {
     // Count pure cancellations (cancelled without reschedule)
     const pureCancelledCount = cancelledBookings.length - rescheduledCount;
 
-    // Count links sent from Airtable
-    const linksSentCount = airtableRecords.filter(
+    // Count links sent from Airtable (filtered by date)
+    const linksSentCount = filteredAirtableRecords.filter(
       (r: AirtableRecord) => r.fields.Enlace_Cita_Enviado === true
     ).length;
 
-    // Total chats (total Airtable records)
-    const totalChats = airtableRecords.length;
+    // Total chats (filtered Airtable records)
+    const totalChats = filteredAirtableRecords.length;
 
     // Calculate conversion rates
     const totalConfirmed = upcomingBookings.length + pastBookings.length;

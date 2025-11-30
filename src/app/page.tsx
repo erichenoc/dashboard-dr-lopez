@@ -145,8 +145,8 @@ export default function Dashboard() {
   const [filterMonth, setFilterMonth] = useState<string>((new Date().getMonth() + 1).toString());
   const [n8nLoading, setN8nLoading] = useState(false);
 
-  // Fetch n8n metrics with filters
-  const fetchN8nMetrics = async (period: FilterPeriod, year?: string, month?: string) => {
+  // Fetch n8n metrics and stats with filters
+  const fetchFilteredData = async (period: FilterPeriod, year?: string, month?: string) => {
     setN8nLoading(true);
     try {
       const params = new URLSearchParams({ period });
@@ -157,13 +157,21 @@ export default function Dashboard() {
         params.set('month', month);
       }
 
-      const res = await fetch(`/api/n8n-metrics?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
+      const [n8nRes, statsRes] = await Promise.all([
+        fetch(`/api/n8n-metrics?${params.toString()}`),
+        fetch(`/api/stats?${params.toString()}`)
+      ]);
+
+      if (n8nRes.ok) {
+        const data = await n8nRes.json();
         setN8nMetrics(data);
       }
+      if (statsRes.ok) {
+        const data = await statsRes.json();
+        setStats(data);
+      }
     } catch (err) {
-      console.error('Error fetching n8n metrics:', err);
+      console.error('Error fetching filtered data:', err);
     } finally {
       setN8nLoading(false);
     }
@@ -172,20 +180,20 @@ export default function Dashboard() {
   // Handle filter change
   const handleFilterChange = (period: FilterPeriod) => {
     setFilterPeriod(period);
-    fetchN8nMetrics(period, filterYear, filterMonth);
+    fetchFilteredData(period, filterYear, filterMonth);
   };
 
   const handleYearChange = (year: string) => {
     setFilterYear(year);
     if (filterPeriod === 'year' || filterPeriod === 'month') {
-      fetchN8nMetrics(filterPeriod, year, filterMonth);
+      fetchFilteredData(filterPeriod, year, filterMonth);
     }
   };
 
   const handleMonthChange = (month: string) => {
     setFilterMonth(month);
     if (filterPeriod === 'month') {
-      fetchN8nMetrics(filterPeriod, filterYear, month);
+      fetchFilteredData(filterPeriod, filterYear, month);
     }
   };
 
