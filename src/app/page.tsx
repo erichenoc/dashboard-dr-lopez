@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 interface Stats {
   totalChats: number;
@@ -19,6 +20,21 @@ interface Stats {
     status: string;
   }[];
   lastUpdated: string;
+}
+
+interface N8nMetrics {
+  totalExecutions7Days: number;
+  successfulExecutions7Days: number;
+  failedExecutions7Days: number;
+  successRate7Days: string;
+  totalExecutions30Days: number;
+  successRate30Days: string;
+  recentExecutions: {
+    id: number;
+    status: string;
+    startedAt: string;
+    duration: number | null;
+  }[];
 }
 
 function StatCard({
@@ -104,16 +120,26 @@ function UpcomingBookings({ bookings }: { bookings: Stats['recentUpcoming'] }) {
 
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [n8nMetrics, setN8nMetrics] = useState<N8nMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const response = await fetch('/api/stats');
-        if (!response.ok) throw new Error('Error fetching stats');
-        const data = await response.json();
-        setStats(data);
+        const [statsRes, n8nRes] = await Promise.all([
+          fetch('/api/stats'),
+          fetch('/api/n8n-metrics')
+        ]);
+
+        if (!statsRes.ok) throw new Error('Error fetching stats');
+        const statsData = await statsRes.json();
+        setStats(statsData);
+
+        if (n8nRes.ok) {
+          const n8nData = await n8nRes.json();
+          setN8nMetrics(n8nData);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
@@ -162,13 +188,21 @@ export default function Dashboard() {
                 Agente de WhatsApp - Metricas en tiempo real
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-gray-400">Ultima actualizacion</p>
-              <p className="text-sm text-gray-600">
-                {stats?.lastUpdated
-                  ? new Date(stats.lastUpdated).toLocaleString('es-ES')
-                  : '-'}
-              </p>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/citas"
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+              >
+                Gestionar Citas
+              </Link>
+              <div className="text-right">
+                <p className="text-xs text-gray-400">Ultima actualizacion</p>
+                <p className="text-sm text-gray-600">
+                  {stats?.lastUpdated
+                    ? new Date(stats.lastUpdated).toLocaleString('es-ES')
+                    : '-'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -236,6 +270,94 @@ export default function Dashboard() {
           </h2>
           <UpcomingBookings bookings={stats?.recentUpcoming || []} />
         </div>
+
+        {/* n8n Agent Metrics */}
+        {n8nMetrics && (
+          <div className="mt-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              Actividad del Agente de WhatsApp
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+              <StatCard
+                title="Mensajes Procesados (7 dias)"
+                value={n8nMetrics.totalExecutions7Days}
+                subtitle={`${n8nMetrics.successRate7Days}% exitosos`}
+                color="purple"
+                icon="🤖"
+              />
+              <StatCard
+                title="Exitosos (7 dias)"
+                value={n8nMetrics.successfulExecutions7Days}
+                subtitle="Conversaciones completadas"
+                color="green"
+                icon="✓"
+              />
+              <StatCard
+                title="Errores (7 dias)"
+                value={n8nMetrics.failedExecutions7Days}
+                subtitle="Requieren atencion"
+                color="red"
+                icon="⚠"
+              />
+              <StatCard
+                title="Total (30 dias)"
+                value={n8nMetrics.totalExecutions30Days}
+                subtitle={`${n8nMetrics.successRate30Days}% exito`}
+                color="cyan"
+                icon="📊"
+              />
+            </div>
+
+            {/* Recent Executions */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Ultimas Ejecuciones del Agente
+              </h3>
+              <div className="space-y-2">
+                {n8nMetrics.recentExecutions.slice(0, 5).map((exec) => (
+                  <div
+                    key={exec.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`w-3 h-3 rounded-full ${
+                          exec.status === 'success'
+                            ? 'bg-green-500'
+                            : 'bg-red-500'
+                        }`}
+                      />
+                      <span className="text-sm text-gray-600">
+                        {new Date(exec.startedAt).toLocaleString('es-ES', {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      {exec.duration !== null && (
+                        <span className="text-xs text-gray-400">
+                          {exec.duration}s
+                        </span>
+                      )}
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          exec.status === 'success'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {exec.status === 'success' ? 'Exitoso' : 'Error'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <footer className="mt-8 text-center text-gray-500 text-sm">
           <p>Dashboard creado por Henoc Marketing</p>

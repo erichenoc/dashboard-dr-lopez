@@ -1,0 +1,134 @@
+{
+  "name": "Tracking Enlaces Cal.com - Dr. Lopez",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tracking-enlace-calcom",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appJcfkxKBSlSMBtI",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "Datos de Clientes",
+          "mode": "name"
+        },
+        "filterByFormula": "={Teléfono}=\"{{ $json.telefono }}\""
+      },
+      "id": "airtable-search",
+      "name": "Buscar Cliente en Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_AIRTABLE_CREDENTIAL_ID",
+          "name": "Airtable API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appJcfkxKBSlSMBtI",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "Datos de Clientes",
+          "mode": "name"
+        },
+        "id": "={{ $json.id }}",
+        "fields": {
+          "fieldType": "manual",
+          "fieldValues": [
+            {
+              "fieldId": "Enlace_Cita_Enviado",
+              "fieldValue": true
+            },
+            {
+              "fieldId": "Última actualización",
+              "fieldValue": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "airtable-update",
+      "name": "Marcar Enlace Enviado",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_AIRTABLE_CREDENTIAL_ID",
+          "name": "Airtable API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Enlace marcado correctamente', recordId: $json.id }) }}"
+      },
+      "id": "respond-success",
+      "name": "Responder Exito",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Buscar Cliente en Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Cliente en Airtable": {
+      "main": [
+        [
+          {
+            "node": "Marcar Enlace Enviado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Enlace Enviado": {
+      "main": [
+        [
+          {
+            "node": "Responder Exito",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

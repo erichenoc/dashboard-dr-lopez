@@ -40,24 +40,34 @@ async function getAirtableRecords() {
   const baseId = process.env.AIRTABLE_BASE_ID;
   const tableName = encodeURIComponent(process.env.AIRTABLE_TABLE_NAME || 'Datos de Clientes');
 
-  const response = await fetch(
-    `https://api.airtable.com/v0/${baseId}/${tableName}`,
-    {
+  let allRecords: AirtableRecord[] = [];
+  let offset: string | undefined;
+
+  do {
+    const url = new URL(`https://api.airtable.com/v0/${baseId}/${tableName}`);
+    if (offset) {
+      url.searchParams.set('offset', offset);
+    }
+
+    const response = await fetch(url.toString(), {
       headers: {
         'Authorization': `Bearer ${process.env.AIRTABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       next: { revalidate: 60 }
+    });
+
+    if (!response.ok) {
+      console.error('Airtable API error:', await response.text());
+      break;
     }
-  );
 
-  if (!response.ok) {
-    console.error('Airtable API error:', await response.text());
-    return [];
-  }
+    const data = await response.json();
+    allRecords = allRecords.concat(data.records || []);
+    offset = data.offset;
+  } while (offset);
 
-  const data = await response.json();
-  return data.records || [];
+  return allRecords;
 }
 
 export async function GET() {
