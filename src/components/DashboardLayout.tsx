@@ -55,7 +55,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <Sidebar />
+        <Sidebar isMobile onClose={() => setSidebarOpen(false)} />
       </div>
 
       {/* Main Content */}

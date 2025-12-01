@@ -14,6 +14,7 @@ import {
   Stethoscope,
   Download,
   Users,
+  X,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -22,6 +23,11 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   badge?: number;
+}
+
+interface SidebarProps {
+  onClose?: () => void;
+  isMobile?: boolean;
 }
 
 const navigation: NavItem[] = [
@@ -33,9 +39,15 @@ const navigation: NavItem[] = [
   { name: 'Reportes', href: '/reports', icon: Download },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onClose, isMobile = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+
+  const handleLinkClick = () => {
+    if (isMobile && onClose) {
+      onClose();
+    }
+  };
 
   return (
     <aside
@@ -61,10 +73,18 @@ export default function Sidebar() {
             </div>
           </div>
         )}
-        {collapsed && (
+        {collapsed && !isMobile && (
           <div className="w-8 h-8 mx-auto rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
             <Stethoscope className="w-5 h-5 text-white" />
           </div>
+        )}
+        {isMobile && onClose && (
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <X className="w-5 h-5" />
+          </button>
         )}
       </div>
 
@@ -76,6 +96,7 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={handleLinkClick}
               className={clsx(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group',
                 isActive
@@ -108,6 +129,7 @@ export default function Sidebar() {
       <div className="border-t border-gray-200 dark:border-gray-800 p-2">
         <Link
           href="/settings"
+          onClick={handleLinkClick}
           className={clsx(
             'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
             pathname === '/settings'
@@ -119,19 +141,21 @@ export default function Sidebar() {
           {!collapsed && <span className="text-sm font-medium">Configuracion</span>}
         </Link>
 
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center gap-3 px-3 py-2.5 mt-1 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
-        >
-          {collapsed ? (
-            <ChevronRight className="w-5 h-5 flex-shrink-0" />
-          ) : (
-            <>
-              <ChevronLeft className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm font-medium">Colapsar</span>
-            </>
-          )}
-        </button>
+        {!isMobile && (
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 mt-1 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
+          >
+            {collapsed ? (
+              <ChevronRight className="w-5 h-5 flex-shrink-0" />
+            ) : (
+              <>
+                <ChevronLeft className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm font-medium">Colapsar</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </aside>
   );
