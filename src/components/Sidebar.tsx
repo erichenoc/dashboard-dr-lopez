@@ -52,8 +52,9 @@ export default function Sidebar({ onClose, isMobile = false }: SidebarProps) {
   return (
     <aside
       className={clsx(
-        'fixed left-0 top-0 z-40 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out flex flex-col',
-        collapsed ? 'w-16' : 'w-64'
+        'h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out flex flex-col',
+        isMobile ? 'w-64' : 'fixed left-0 top-0 z-40',
+        !isMobile && (collapsed ? 'w-16' : 'w-64')
       )}
     >
       {/* Logo */}
