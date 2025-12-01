@@ -168,31 +168,34 @@ export default function ServicesPage() {
               data={chartData}
               layout="vertical"
               margin={{ left: 10, right: 30, top: 10, bottom: 10 }}
-              barCategoryGap="20%"
+              barGap={2}
+              barCategoryGap="15%"
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={true} vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={true} vertical={false} opacity={0.3} />
               <XAxis
                 type="number"
-                tick={{ fontSize: 12, fill: '#6B7280' }}
-                axisLine={{ stroke: '#E5E7EB' }}
+                tick={{ fontSize: 12, fill: '#9CA3AF' }}
+                axisLine={{ stroke: '#374151' }}
                 tickLine={false}
               />
               <YAxis
                 dataKey="name"
                 type="category"
                 width={180}
-                tick={{ fontSize: 13, fill: '#374151', fontWeight: 500 }}
+                tick={{ fontSize: 14, fill: '#E5E7EB', fontWeight: 500 }}
                 axisLine={false}
                 tickLine={false}
               />
               <Tooltip
-                cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                cursor={{ fill: 'rgba(59, 130, 246, 0.2)' }}
                 contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #E5E7EB',
+                  backgroundColor: '#1F2937',
+                  border: '1px solid #374151',
                   borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
+                  color: '#fff'
                 }}
+                labelStyle={{ color: '#fff', fontWeight: 600 }}
                 labelFormatter={(value, payload) => {
                   if (payload && payload[0]) {
                     return payload[0].payload.fullName;
@@ -200,9 +203,9 @@ export default function ServicesPage() {
                   return value;
                 }}
               />
-              <Bar dataKey="consultas" fill="#3B82F6" radius={[0, 6, 6, 0]} name="Consultas" barSize={18} />
-              <Bar dataKey="enlaces" fill="#8B5CF6" radius={[0, 6, 6, 0]} name="Enlaces" barSize={18} />
-              <Bar dataKey="citas" fill="#10B981" radius={[0, 6, 6, 0]} name="Citas" barSize={18} />
+              <Bar dataKey="consultas" fill="#3B82F6" radius={[0, 4, 4, 0]} name="Consultas" />
+              <Bar dataKey="enlaces" fill="#8B5CF6" radius={[0, 4, 4, 0]} name="Enlaces" />
+              <Bar dataKey="citas" fill="#10B981" radius={[0, 4, 4, 0]} name="Citas" />
             </BarChart>
           </ResponsiveContainer>
         ) : (
