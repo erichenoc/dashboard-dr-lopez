@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 interface SupabaseMessage {
   id: number;
   session_id: string;
+  created_at: string;
   message: {
     type: 'human' | 'ai';
     content: string;
@@ -132,17 +133,18 @@ export async function GET() {
           servicesConsulted: [],
           calLinkSent: false,
           lastMessage: '',
-          lastMessageTime: null,
-          lastMessageId: msg.id, // El primer mensaje que vemos es el más reciente (orden desc)
+          lastMessageTime: msg.created_at, // El primer mensaje que vemos es el más reciente (orden desc)
+          lastMessageId: msg.id,
         });
       }
 
       const conv = conversationMap.get(sessionId)!;
       conv.messageCount++;
 
-      // Actualizar el ID más reciente si es mayor
+      // Actualizar el ID más reciente y el timestamp si es mayor
       if (msg.id > conv.lastMessageId) {
         conv.lastMessageId = msg.id;
+        conv.lastMessageTime = msg.created_at;
       }
 
       // Contar interacciones (solo mensajes del usuario)

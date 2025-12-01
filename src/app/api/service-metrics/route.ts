@@ -68,12 +68,21 @@ function namesMatch(name1: string, name2: string): boolean {
   return false;
 }
 
+interface ClientInfo {
+  name: string;
+  phone: string;
+  sessionId: string;
+  calLinkSent: boolean;
+  hasBooking: boolean;
+}
+
 interface ServiceMetric {
   service: string;
   consultations: number;
   linksSent: number;
   bookingsConfirmed: number;
   conversionRate: number;
+  clients: ClientInfo[];
 }
 
 interface ConversationData {
@@ -283,7 +292,12 @@ export async function GET() {
     const serviceMap = new Map<string, {
       consultations: number;
       linksSent: number;
-      clientNames: string[];
+      clients: Array<{
+        name: string;
+        phone: string;
+        sessionId: string;
+        calLinkSent: boolean;
+      }>;
     }>();
 
     for (const conv of conversations) {
@@ -291,14 +305,19 @@ export async function GET() {
         const current = serviceMap.get(service) || {
           consultations: 0,
           linksSent: 0,
-          clientNames: []
+          clients: []
         };
 
         current.consultations++;
         if (conv.calLinkSent) {
           current.linksSent++;
         }
-        current.clientNames.push(conv.userName.toLowerCase());
+        current.clients.push({
+          name: conv.userName,
+          phone: conv.phoneNumber,
+          sessionId: conv.sessionId,
+          calLinkSent: conv.calLinkSent,
+        });
 
         serviceMap.set(service, current);
       }
@@ -311,13 +330,21 @@ export async function GET() {
       let bookingsConfirmed = 0;
       const checkedNames = new Set<string>();
 
-      data.clientNames.forEach(name => {
-        // Avoid counting the same client twice
-        const normalizedName = normalizeName(name);
-        if (!checkedNames.has(normalizedName) && hasBooking(name)) {
+      // Add booking status to each client
+      const clientsWithBooking: ClientInfo[] = data.clients.map(client => {
+        const clientHasBooking = hasBooking(client.name);
+        const normalizedName = normalizeName(client.name);
+
+        // Count unique bookings
+        if (!checkedNames.has(normalizedName) && clientHasBooking) {
           bookingsConfirmed++;
           checkedNames.add(normalizedName);
         }
+
+        return {
+          ...client,
+          hasBooking: clientHasBooking,
+        };
       });
 
       const conversionRate = data.linksSent > 0
@@ -329,7 +356,8 @@ export async function GET() {
         consultations: data.consultations,
         linksSent: data.linksSent,
         bookingsConfirmed,
-        conversionRate
+        conversionRate,
+        clients: clientsWithBooking,
       });
     });
 
