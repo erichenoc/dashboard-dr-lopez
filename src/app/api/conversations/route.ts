@@ -14,6 +14,7 @@ interface Conversation {
   phoneNumber: string;
   userName: string;
   messageCount: number;
+  interactions: number; // Solo mensajes del usuario (humanos)
   servicesConsulted: string[];
   calLinkSent: boolean;
   lastMessage: string;
@@ -115,12 +116,18 @@ export async function GET() {
       const content = msg.message?.content || '';
       const type = msg.message?.type;
 
+      // Filtrar sesiones que no son de WhatsApp (ej: session_id = "1" es datos de prueba)
+      if (!sessionId.includes('@')) {
+        continue;
+      }
+
       if (!conversationMap.has(sessionId)) {
         conversationMap.set(sessionId, {
           sessionId,
           phoneNumber: extractPhoneNumber(sessionId),
           userName: 'Desconocido',
           messageCount: 0,
+          interactions: 0, // Solo mensajes humanos
           servicesConsulted: [],
           calLinkSent: false,
           lastMessage: '',
@@ -130,6 +137,11 @@ export async function GET() {
 
       const conv = conversationMap.get(sessionId)!;
       conv.messageCount++;
+
+      // Contar interacciones (solo mensajes del usuario)
+      if (type === 'human') {
+        conv.interactions++;
+      }
 
       if (type === 'human') {
         const userName = extractUserName(content);
@@ -163,8 +175,8 @@ export async function GET() {
       }
     });
 
-    // Sort by message count (most active first)
-    conversations.sort((a, b) => b.messageCount - a.messageCount);
+    // Sort by interactions (most active first)
+    conversations.sort((a, b) => b.interactions - a.interactions);
 
     return NextResponse.json({
       conversations: conversations.slice(0, 100),

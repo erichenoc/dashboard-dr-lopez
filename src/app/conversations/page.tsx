@@ -21,6 +21,7 @@ interface Conversation {
   phoneNumber: string;
   userName: string;
   messageCount: number;
+  interactions: number; // Solo mensajes del usuario
   servicesConsulted: string[];
   calLinkSent: boolean;
   lastMessage: string;
@@ -62,11 +63,11 @@ export default function ConversationsPage() {
 
   const handleExportCSV = () => {
     if (!data) return;
-    const headers = ['Telefono', 'Nombre', 'Mensajes', 'Servicios', 'Enlace Enviado'];
+    const headers = ['Telefono', 'Nombre', 'Interacciones', 'Servicios', 'Enlace Enviado'];
     const rows = filteredConversations.map(c => [
       c.phoneNumber,
       c.userName,
-      c.messageCount,
+      c.interactions,
       c.servicesConsulted.join('; '),
       c.calLinkSent ? 'Si' : 'No'
     ]);
@@ -205,8 +206,8 @@ export default function ConversationsPage() {
           <p className="text-2xl font-bold text-orange-600">{filteredConversations.filter(c => !c.calLinkSent).length}</p>
         </div>
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Total Mensajes</p>
-          <p className="text-2xl font-bold text-blue-600">{filteredConversations.reduce((sum, c) => sum + c.messageCount, 0)}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Total Interacciones</p>
+          <p className="text-2xl font-bold text-blue-600">{filteredConversations.reduce((sum, c) => sum + c.interactions, 0)}</p>
         </div>
       </div>
 
@@ -219,7 +220,7 @@ export default function ConversationsPage() {
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Cliente</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase hidden sm:table-cell">Telefono</th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase hidden md:table-cell">Servicios</th>
-                <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Mensajes</th>
+                <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Interacciones</th>
                 <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Enlace</th>
               </tr>
             </thead>
@@ -269,7 +270,7 @@ export default function ConversationsPage() {
                     <div className="flex items-center justify-center gap-1">
                       <MessageSquare className="w-3 h-3 text-gray-400" />
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {conv.messageCount}
+                        {conv.interactions}
                       </span>
                     </div>
                   </td>
