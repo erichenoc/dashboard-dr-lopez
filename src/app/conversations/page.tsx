@@ -225,7 +225,7 @@ export default function ConversationsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredConversations.slice(0, 50).map((conv) => (
+              {filteredConversations.slice(0, 100).map((conv) => (
                 <tr
                   key={conv.sessionId}
                   className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -292,9 +292,9 @@ export default function ConversationsPage() {
             </tbody>
           </table>
         </div>
-        {filteredConversations.length > 50 && (
+        {filteredConversations.length > 100 && (
           <div className="p-4 text-center text-sm text-gray-500 border-t border-gray-200 dark:border-gray-700">
-            Mostrando 50 de {filteredConversations.length} conversaciones
+            Mostrando 100 de {filteredConversations.length} conversaciones
           </div>
         )}
       </div>

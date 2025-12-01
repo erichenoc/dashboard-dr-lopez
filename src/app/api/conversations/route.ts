@@ -19,6 +19,7 @@ interface Conversation {
   calLinkSent: boolean;
   lastMessage: string;
   lastMessageTime: string | null;
+  lastMessageId: number; // Para ordenar por más reciente
 }
 
 // Service keywords to detect
@@ -132,11 +133,17 @@ export async function GET() {
           calLinkSent: false,
           lastMessage: '',
           lastMessageTime: null,
+          lastMessageId: msg.id, // El primer mensaje que vemos es el más reciente (orden desc)
         });
       }
 
       const conv = conversationMap.get(sessionId)!;
       conv.messageCount++;
+
+      // Actualizar el ID más reciente si es mayor
+      if (msg.id > conv.lastMessageId) {
+        conv.lastMessageId = msg.id;
+      }
 
       // Contar interacciones (solo mensajes del usuario)
       if (type === 'human') {
@@ -175,11 +182,11 @@ export async function GET() {
       }
     });
 
-    // Sort by interactions (most active first)
-    conversations.sort((a, b) => b.interactions - a.interactions);
+    // Sort by most recent first (highest message ID = most recent)
+    conversations.sort((a, b) => b.lastMessageId - a.lastMessageId);
 
     return NextResponse.json({
-      conversations: conversations.slice(0, 100),
+      conversations: conversations.slice(0, 500), // Aumentado de 100 a 500
       total: conversations.length,
       lastUpdated: new Date().toISOString(),
     });
