@@ -158,7 +158,7 @@ export default function ConversationsPage() {
               placeholder="Buscar por nombre o telefono..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -168,7 +168,7 @@ export default function ConversationsPage() {
             <select
               value={filterLinkSent}
               onChange={(e) => setFilterLinkSent(e.target.value as 'all' | 'yes' | 'no')}
-              className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">Todos</option>
               <option value="yes">Con enlace enviado</option>
@@ -180,7 +180,7 @@ export default function ConversationsPage() {
           <select
             value={filterService}
             onChange={(e) => setFilterService(e.target.value)}
-            className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Todos los servicios</option>
             {uniqueServices.map(service => (
@@ -216,11 +216,11 @@ export default function ConversationsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Cliente</th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Telefono</th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Servicios</th>
-                <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Mensajes</th>
-                <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Enlace</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Cliente</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase hidden sm:table-cell">Telefono</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase hidden md:table-cell">Servicios</th>
+                <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Mensajes</th>
+                <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Enlace</th>
               </tr>
             </thead>
             <tbody>
@@ -239,13 +239,13 @@ export default function ConversationsPage() {
                       </span>
                     </div>
                   </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <td className="py-3 px-4 hidden sm:table-cell">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                       <Phone className="w-3 h-3" />
                       {conv.phoneNumber}
                     </div>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-4 hidden md:table-cell">
                     <div className="flex flex-wrap gap-1">
                       {conv.servicesConsulted.length > 0 ? (
                         conv.servicesConsulted.slice(0, 2).map((service) => (
@@ -280,7 +280,7 @@ export default function ConversationsPage() {
                         Enviado
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-full text-xs font-medium">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full text-xs font-medium">
                         <XCircle className="w-3 h-3" />
                         No
                       </span>

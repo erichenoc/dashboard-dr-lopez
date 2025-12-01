@@ -51,7 +51,7 @@ export default function AppointmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Citas</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -62,8 +62,8 @@ export default function AppointmentsPage() {
           onClick={() => fetchData(true)}
           disabled={refreshing}
           className={clsx(
-            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium',
-            refreshing ? 'bg-gray-100 text-gray-400' : 'bg-blue-500 text-white hover:bg-blue-600'
+            'flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium w-full sm:w-auto',
+            refreshing ? 'bg-gray-100 text-gray-400 dark:bg-gray-800' : 'bg-blue-500 text-white hover:bg-blue-600'
           )}
         >
           <RefreshCw className={clsx('w-4 h-4', refreshing && 'animate-spin')} />
@@ -79,7 +79,7 @@ export default function AppointmentsPage() {
               <Calendar className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Proximas</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">Proximas</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.upcomingBookings || 0}</p>
             </div>
           </div>
@@ -90,7 +90,7 @@ export default function AppointmentsPage() {
               <CheckCircle2 className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Completadas</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">Completadas</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.pastBookings || 0}</p>
             </div>
           </div>
@@ -101,7 +101,7 @@ export default function AppointmentsPage() {
               <XCircle className="w-5 h-5 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Canceladas</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">Canceladas</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.cancelledBookings || 0}</p>
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function AppointmentsPage() {
               <RefreshCw className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Reagendadas</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">Reagendadas</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.rescheduledBookings || 0}</p>
             </div>
           </div>
@@ -127,27 +127,31 @@ export default function AppointmentsPage() {
             {stats.recentUpcoming.map((booking, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg gap-3"
               >
                 <div className="flex items-center gap-4">
-                  <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-3 rounded-lg">
+                  <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-3 rounded-lg flex-shrink-0">
                     <User className="w-5 h-5" />
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{booking.attendee}</p>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Calendar className="w-3 h-3" />
-                      <span>{booking.date}</span>
-                      <Clock className="w-3 h-3 ml-2" />
-                      <span>{booking.time}</span>
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 dark:text-white truncate">{booking.attendee}</p>
+                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {booking.date}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {booking.time}
+                      </span>
                     </div>
                   </div>
                 </div>
                 <span className={clsx(
-                  'px-3 py-1 rounded-full text-xs font-medium',
+                  'px-3 py-1 rounded-full text-xs font-medium self-start sm:self-center flex-shrink-0',
                   booking.status === 'Reagendado'
-                    ? 'bg-orange-100 text-orange-600'
-                    : 'bg-green-100 text-green-600'
+                    ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'
+                    : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
                 )}>
                   {booking.status}
                 </span>
@@ -155,7 +159,7 @@ export default function AppointmentsPage() {
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500 py-8">No hay citas programadas</p>
+          <p className="text-center text-gray-500 dark:text-gray-400 py-8">No hay citas programadas</p>
         )}
       </div>
 

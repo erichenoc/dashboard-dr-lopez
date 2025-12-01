@@ -75,7 +75,7 @@ export default function ServicesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Servicios</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -86,8 +86,8 @@ export default function ServicesPage() {
           onClick={() => fetchData(true)}
           disabled={refreshing}
           className={clsx(
-            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium',
-            refreshing ? 'bg-gray-100 text-gray-400' : 'bg-blue-500 text-white hover:bg-blue-600'
+            'flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium w-full sm:w-auto',
+            refreshing ? 'bg-gray-100 text-gray-400 dark:bg-gray-800' : 'bg-blue-500 text-white hover:bg-blue-600'
           )}
         >
           <RefreshCw className={clsx('w-4 h-4', refreshing && 'animate-spin')} />
@@ -103,7 +103,7 @@ export default function ServicesPage() {
               <Stethoscope className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Servicios Unicos</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">Servicios Unicos</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{data?.totals.uniqueServices || 0}</p>
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function ServicesPage() {
               <Users className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Consultas</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">Total Consultas</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{data?.totals.totalConsultations || 0}</p>
             </div>
           </div>
@@ -125,7 +125,7 @@ export default function ServicesPage() {
               <Link2 className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Enlaces Enviados</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">Enlaces Enviados</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{data?.totals.totalLinksSent || 0}</p>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function ServicesPage() {
               <TrendingUp className="w-5 h-5 text-cyan-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Citas</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">Total Citas</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{data?.totals.totalBookings || 0}</p>
             </div>
           </div>
@@ -167,10 +167,10 @@ export default function ServicesPage() {
             {chartData.map((item, index) => (
               <div key={item.name} className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-200 truncate" style={{ maxWidth: '180px' }} title={item.fullName}>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-100 truncate max-w-[120px] sm:max-w-[180px]" title={item.fullName}>
                     {item.name}
                   </span>
-                  <span className="text-xs text-gray-400 ml-2">
+                  <span className="text-xs text-gray-500 dark:text-gray-300 ml-2">
                     {item.consultas.toLocaleString()}
                   </span>
                 </div>
@@ -203,14 +203,15 @@ export default function ServicesPage() {
 
       {/* Services Table */}
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[400px]">
           <thead>
             <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-              <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">Servicio</th>
-              <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 uppercase">Consultas</th>
-              <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 uppercase">Enlaces</th>
-              <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 uppercase">Citas</th>
-              <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 uppercase">Conversion</th>
+              <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Servicio</th>
+              <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase hidden sm:table-cell">Consultas</th>
+              <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase hidden md:table-cell">Enlaces</th>
+              <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase hidden sm:table-cell">Citas</th>
+              <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Conversion</th>
             </tr>
           </thead>
           <tbody>
@@ -222,15 +223,15 @@ export default function ServicesPage() {
                     <span className="font-medium text-gray-900 dark:text-white text-sm">{service.service}</span>
                   </div>
                 </td>
-                <td className="py-3 px-4 text-center text-sm text-gray-600 dark:text-gray-400">{service.consultations}</td>
-                <td className="py-3 px-4 text-center text-sm text-gray-600 dark:text-gray-400">{service.linksSent}</td>
-                <td className="py-3 px-4 text-center text-sm text-gray-600 dark:text-gray-400">{service.bookingsConfirmed}</td>
+                <td className="py-3 px-4 text-center text-sm text-gray-600 dark:text-gray-300 hidden sm:table-cell">{service.consultations}</td>
+                <td className="py-3 px-4 text-center text-sm text-gray-600 dark:text-gray-300 hidden md:table-cell">{service.linksSent}</td>
+                <td className="py-3 px-4 text-center text-sm text-gray-600 dark:text-gray-300 hidden sm:table-cell">{service.bookingsConfirmed}</td>
                 <td className="py-3 px-4 text-center">
                   <span className={clsx(
                     'px-2 py-1 rounded-full text-xs font-medium',
-                    service.conversionRate > 50 ? 'bg-green-100 text-green-700' :
-                    service.conversionRate > 20 ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-gray-100 text-gray-600'
+                    service.conversionRate > 50 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                    service.conversionRate > 20 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                    'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
                   )}>
                     {service.conversionRate}%
                   </span>
@@ -239,6 +240,7 @@ export default function ServicesPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

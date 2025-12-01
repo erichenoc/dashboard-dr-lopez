@@ -39,17 +39,17 @@ export default function ClientsPage() {
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
           <UserCheck className="w-8 h-8 text-green-600 mb-3" />
           <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Perfil de Cliente</h3>
-          <p className="text-sm text-gray-500">Ver historial completo de conversaciones y citas</p>
+          <p className="text-sm text-gray-500 dark:text-gray-300">Ver historial completo de conversaciones y citas</p>
         </div>
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
           <Clock className="w-8 h-8 text-purple-600 mb-3" />
           <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Timeline</h3>
-          <p className="text-sm text-gray-500">Seguimiento de todas las interacciones del cliente</p>
+          <p className="text-sm text-gray-500 dark:text-gray-300">Seguimiento de todas las interacciones del cliente</p>
         </div>
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
           <Users className="w-8 h-8 text-blue-600 mb-3" />
           <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Segmentacion</h3>
-          <p className="text-sm text-gray-500">Agrupar clientes por servicio de interes</p>
+          <p className="text-sm text-gray-500 dark:text-gray-300">Agrupar clientes por servicio de interes</p>
         </div>
       </div>
     </div>

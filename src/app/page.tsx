@@ -133,7 +133,7 @@ function KPICard({
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{value}</p>
           {subtitle && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{subtitle}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">{subtitle}</p>
           )}
           {trend && trendValue && (
             <div className={clsx(
@@ -537,7 +537,7 @@ export default function Dashboard() {
               return (
                 <div key={item.name}>
                   <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-gray-600 dark:text-gray-400">{item.name}</span>
+                    <span className="text-gray-600 dark:text-gray-300">{item.name}</span>
                     <span className="font-semibold text-gray-900 dark:text-white">{item.value}</span>
                   </div>
                   <div className="h-8 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
@@ -563,7 +563,7 @@ export default function Dashboard() {
           {serviceMetrics?.calcomStats && (
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Conversion Total</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Conversion Total</span>
                 <span className="text-lg font-bold text-green-600">
                   {serviceMetrics.calcomStats.overallConversionRate}%
                 </span>
@@ -593,7 +593,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between text-sm mb-1">
                       <span className="text-gray-700 dark:text-gray-300 font-medium">{service.service}</span>
                       <div className="flex items-center gap-2 text-xs">
-                        <span className="text-gray-500">{service.consultations} consultas</span>
+                        <span className="text-gray-500 dark:text-gray-400">{service.consultations} consultas</span>
                         {service.conversionRate > 0 && (
                           <span className="text-green-600 font-semibold">{service.conversionRate}%</span>
                         )}
@@ -697,7 +697,7 @@ export default function Dashboard() {
                         minute: '2-digit',
                       })}
                     </td>
-                    <td className="py-3 text-sm text-gray-500 dark:text-gray-500">
+                    <td className="py-3 text-sm text-gray-500 dark:text-gray-400">
                       {exec.duration !== null ? `${exec.duration}s` : '-'}
                     </td>
                   </tr>

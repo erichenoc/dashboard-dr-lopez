@@ -23,10 +23,10 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="font-medium text-gray-900 dark:text-white">Supabase</p>
-                <p className="text-xs text-gray-500">Base de datos de conversaciones</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Base de datos de conversaciones</p>
               </div>
             </div>
-            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+            <span className="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full text-xs font-medium">
               Conectado
             </span>
           </div>
@@ -38,10 +38,10 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="font-medium text-gray-900 dark:text-white">n8n</p>
-                <p className="text-xs text-gray-500">Automatizacion del agente</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Automatizacion del agente</p>
               </div>
             </div>
-            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+            <span className="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full text-xs font-medium">
               Conectado
             </span>
           </div>
@@ -53,10 +53,10 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="font-medium text-gray-900 dark:text-white">Cal.com</p>
-                <p className="text-xs text-gray-500">Sistema de citas</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Sistema de citas</p>
               </div>
             </div>
-            <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
+            <span className="px-3 py-1 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full text-xs font-medium">
               Verificar API Key
             </span>
           </div>
@@ -68,10 +68,10 @@ export default function SettingsPage() {
               </div>
               <div>
                 <p className="font-medium text-gray-900 dark:text-white">Airtable</p>
-                <p className="text-xs text-gray-500">CRM de clientes</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">CRM de clientes</p>
               </div>
             </div>
-            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+            <span className="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full text-xs font-medium">
               Conectado
             </span>
           </div>
@@ -87,7 +87,7 @@ export default function SettingsPage() {
             </div>
             <h3 className="font-semibold text-gray-900 dark:text-white">Notificaciones</h3>
           </div>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Configura alertas para errores del agente y nuevas citas
           </p>
           <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
@@ -102,7 +102,7 @@ export default function SettingsPage() {
             </div>
             <h3 className="font-semibold text-gray-900 dark:text-white">Seguridad</h3>
           </div>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             Gestion de accesos y autenticacion
           </p>
           <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
@@ -117,7 +117,7 @@ export default function SettingsPage() {
           <Settings className="w-5 h-5 text-gray-400 mt-0.5" />
           <div>
             <h4 className="font-medium text-gray-900 dark:text-white">Variables de Entorno</h4>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Las credenciales de API se configuran mediante variables de entorno en Vercel para mayor seguridad.
             </p>
           </div>
