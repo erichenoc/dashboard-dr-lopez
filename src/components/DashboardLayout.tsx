@@ -52,7 +52,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div
         className={clsx(
           'fixed inset-y-0 left-0 z-40 transform lg:hidden transition-transform duration-300 ease-in-out',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
         )}
       >
         <Sidebar isMobile onClose={() => setSidebarOpen(false)} />
