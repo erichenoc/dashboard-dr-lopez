@@ -66,7 +66,8 @@ export default function ServicesPage() {
   }
 
   const chartData = data?.services.slice(0, 10).map(s => ({
-    name: s.service.length > 12 ? s.service.substring(0, 12) + '...' : s.service,
+    name: s.service.length > 25 ? s.service.substring(0, 25) + '...' : s.service,
+    fullName: s.service,
     consultas: s.consultations,
     enlaces: s.linksSent,
     citas: s.bookingsConfirmed,
@@ -143,22 +144,69 @@ export default function ServicesPage() {
       </div>
 
       {/* Chart */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Top 10 Servicios</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Top 10 Servicios</h3>
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500" />
+              <span className="text-gray-600 dark:text-gray-400">Consultas</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <span className="text-gray-600 dark:text-gray-400">Enlaces</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-emerald-500" />
+              <span className="text-gray-600 dark:text-gray-400">Citas</span>
+            </div>
+          </div>
+        </div>
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={chartData} layout="vertical" margin={{ left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis type="number" tick={{ fontSize: 11 }} stroke="#9CA3AF" />
-              <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} stroke="#9CA3AF" />
-              <Tooltip />
-              <Bar dataKey="consultas" fill="#3B82F6" radius={[0, 4, 4, 0]} name="Consultas" />
-              <Bar dataKey="enlaces" fill="#8B5CF6" radius={[0, 4, 4, 0]} name="Enlaces" />
-              <Bar dataKey="citas" fill="#10B981" radius={[0, 4, 4, 0]} name="Citas" />
+          <ResponsiveContainer width="100%" height={500}>
+            <BarChart
+              data={chartData}
+              layout="vertical"
+              margin={{ left: 10, right: 30, top: 10, bottom: 10 }}
+              barCategoryGap="20%"
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={true} vertical={false} />
+              <XAxis
+                type="number"
+                tick={{ fontSize: 12, fill: '#6B7280' }}
+                axisLine={{ stroke: '#E5E7EB' }}
+                tickLine={false}
+              />
+              <YAxis
+                dataKey="name"
+                type="category"
+                width={180}
+                tick={{ fontSize: 13, fill: '#374151', fontWeight: 500 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+                labelFormatter={(value, payload) => {
+                  if (payload && payload[0]) {
+                    return payload[0].payload.fullName;
+                  }
+                  return value;
+                }}
+              />
+              <Bar dataKey="consultas" fill="#3B82F6" radius={[0, 6, 6, 0]} name="Consultas" barSize={18} />
+              <Bar dataKey="enlaces" fill="#8B5CF6" radius={[0, 6, 6, 0]} name="Enlaces" barSize={18} />
+              <Bar dataKey="citas" fill="#10B981" radius={[0, 6, 6, 0]} name="Citas" barSize={18} />
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-[400px] flex items-center justify-center text-gray-400">
+          <div className="h-[500px] flex items-center justify-center text-gray-400">
             No hay datos disponibles
           </div>
         )}
