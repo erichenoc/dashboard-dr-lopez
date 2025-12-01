@@ -163,51 +163,37 @@ export default function ServicesPage() {
           </div>
         </div>
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={500}>
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{ left: 10, right: 30, top: 10, bottom: 10 }}
-              barGap={2}
-              barCategoryGap="15%"
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={true} vertical={false} opacity={0.3} />
-              <XAxis
-                type="number"
-                tick={{ fontSize: 12, fill: '#9CA3AF' }}
-                axisLine={{ stroke: '#374151' }}
-                tickLine={false}
-              />
-              <YAxis
-                dataKey="name"
-                type="category"
-                width={180}
-                tick={{ fontSize: 14, fill: '#E5E7EB', fontWeight: 500 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                cursor={{ fill: 'rgba(59, 130, 246, 0.2)' }}
-                contentStyle={{
-                  backgroundColor: '#1F2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
-                  color: '#fff'
-                }}
-                labelStyle={{ color: '#fff', fontWeight: 600 }}
-                labelFormatter={(value, payload) => {
-                  if (payload && payload[0]) {
-                    return payload[0].payload.fullName;
-                  }
-                  return value;
-                }}
-              />
-              <Bar dataKey="consultas" fill="#3B82F6" radius={[0, 4, 4, 0]} name="Consultas" />
-              <Bar dataKey="enlaces" fill="#8B5CF6" radius={[0, 4, 4, 0]} name="Enlaces" />
-              <Bar dataKey="citas" fill="#10B981" radius={[0, 4, 4, 0]} name="Citas" />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="space-y-3">
+            {chartData.map((item, index) => (
+              <div key={item.name} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-200 truncate" style={{ maxWidth: '180px' }} title={item.fullName}>
+                    {item.name}
+                  </span>
+                  <span className="text-xs text-gray-400 ml-2">
+                    {item.consultas.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex gap-1 h-8">
+                  <div
+                    className="bg-blue-500 rounded-r-md transition-all duration-300"
+                    style={{ width: `${Math.max((item.consultas / Math.max(...chartData.map(d => d.consultas))) * 100, 2)}%` }}
+                    title={`Consultas: ${item.consultas}`}
+                  />
+                  <div
+                    className="bg-purple-500 rounded-r-md transition-all duration-300"
+                    style={{ width: `${Math.max((item.enlaces / Math.max(...chartData.map(d => d.consultas))) * 100, 1)}%` }}
+                    title={`Enlaces: ${item.enlaces}`}
+                  />
+                  <div
+                    className="bg-emerald-500 rounded-r-md transition-all duration-300"
+                    style={{ width: `${Math.max((item.citas / Math.max(...chartData.map(d => d.consultas))) * 100, 0.5)}%` }}
+                    title={`Citas: ${item.citas}`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="h-[500px] flex items-center justify-center text-gray-400">
             No hay datos disponibles
