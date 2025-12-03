@@ -251,7 +251,7 @@ export default function CitasPage() {
               </p>
             </div>
             <a
-              href="https://app.cal.com/bookings/upcoming"
+              href="https://cal.com/arnaldo-lopez/dr-arnaldo-lopez"
               target="_blank"
               rel="noopener noreferrer"
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
