@@ -201,7 +201,8 @@ const MONTHS = [
 ];
 
 const CHART_COLORS = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#06B6D4'];
-const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+// Refresh every 15 minutes to reduce API calls to Cal.com
+const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
 
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -336,7 +337,7 @@ export default function Dashboard() {
 
   // Prepare chart data
   const chartData = n8nMetrics?.executionsByDay.map(d => ({
-    date: new Date(d.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
+    date: new Date(d.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'America/New_York' }),
     exitosos: d.success,
     errores: d.error,
     total: d.success + d.error,
@@ -695,6 +696,7 @@ export default function Dashboard() {
                         month: 'short',
                         hour: '2-digit',
                         minute: '2-digit',
+                        timeZone: 'America/New_York',
                       })}
                     </td>
                     <td className="py-3 text-sm text-gray-500 dark:text-gray-400">

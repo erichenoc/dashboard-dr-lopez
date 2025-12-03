@@ -252,21 +252,22 @@ function processMessages(messages: SupabaseMessage[]): ConversationData[] {
 }
 
 async function getCalcomBookings(): Promise<CalcomBooking[]> {
-  const allBookings: CalcomBooking[] = [];
+  // Single API call with 10 minute cache to reduce rate limiting
+  const response = await fetch(
+    `https://api.cal.com/v1/bookings?apiKey=${process.env.CALCOM_API_KEY}&take=500`,
+    { next: { revalidate: 600 } }
+  );
 
-  for (const status of ['upcoming', 'past']) {
-    const response = await fetch(
-      `https://api.cal.com/v1/bookings?apiKey=${process.env.CALCOM_API_KEY}&status=${status}`,
-      { next: { revalidate: 60 } }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      allBookings.push(...(data.bookings || []));
-    }
+  if (!response.ok) {
+    console.error('Cal.com API error:', await response.text());
+    return [];
   }
 
-  return allBookings;
+  const data = await response.json();
+  const bookings = data.bookings || [];
+
+  // Filter out cancelled bookings (only keep accepted/confirmed)
+  return bookings.filter((b: CalcomBooking) => b.status !== 'CANCELLED');
 }
 
 export async function GET() {
@@ -347,8 +348,9 @@ export async function GET() {
         };
       });
 
-      const conversionRate = data.linksSent > 0
-        ? Math.round((bookingsConfirmed / data.linksSent) * 100)
+      // Conversion rate: Links Sent / Consultations (what % of consultations received a link)
+      const conversionRate = data.consultations > 0
+        ? Math.round((data.linksSent / data.consultations) * 100)
         : 0;
 
       services.push({

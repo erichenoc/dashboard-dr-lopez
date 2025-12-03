@@ -16,27 +16,39 @@ export async function GET() {
   try {
     const apiKey = process.env.CALCOM_API_KEY;
 
-    // Fetch all booking types
-    const [upcoming, past, cancelled] = await Promise.all([
-      fetch(`https://api.cal.com/v1/bookings?apiKey=${apiKey}&status=upcoming`),
-      fetch(`https://api.cal.com/v1/bookings?apiKey=${apiKey}&status=past`),
-      fetch(`https://api.cal.com/v1/bookings?apiKey=${apiKey}&status=cancelled`)
-    ]);
+    // Single API call with 10 minute cache to reduce rate limiting
+    const response = await fetch(
+      `https://api.cal.com/v1/bookings?apiKey=${apiKey}&take=500`,
+      { next: { revalidate: 600 } }
+    );
 
-    const [upcomingData, pastData, cancelledData] = await Promise.all([
-      upcoming.json(),
-      past.json(),
-      cancelled.json()
-    ]);
+    if (!response.ok) {
+      console.error('Cal.com API error:', await response.text());
+      return NextResponse.json({ bookings: [] });
+    }
 
-    const allBookings = [
-      ...(upcomingData.bookings || []).map((b: CalcomBooking) => ({ ...b, bookingStatus: 'upcoming' })),
-      ...(pastData.bookings || []).map((b: CalcomBooking) => ({ ...b, bookingStatus: 'past' })),
-      ...(cancelledData.bookings || []).map((b: CalcomBooking) => ({ ...b, bookingStatus: 'cancelled' }))
-    ];
+    const data = await response.json();
+    const bookings = data.bookings || [];
+    const now = new Date();
+
+    // Categorize bookings by status and time
+    const allBookings = bookings.map((b: CalcomBooking) => {
+      const startTime = new Date(b.startTime);
+      let bookingStatus: string;
+
+      if (b.status === 'CANCELLED') {
+        bookingStatus = 'cancelled';
+      } else if (startTime > now) {
+        bookingStatus = 'upcoming';
+      } else {
+        bookingStatus = 'past';
+      }
+
+      return { ...b, bookingStatus };
+    });
 
     // Sort by date descending
-    allBookings.sort((a, b) =>
+    allBookings.sort((a: CalcomBooking & { bookingStatus: string }, b: CalcomBooking & { bookingStatus: string }) =>
       new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
     );
 

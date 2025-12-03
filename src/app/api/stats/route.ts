@@ -90,19 +90,41 @@ function getDateRange(period: string, year?: string, month?: string): { start: D
   }
 }
 
-async function getCalcomBookings(status: string) {
+async function getCalcomBookings() {
+  // Fetch all bookings without status filter (Cal.com API v1 no longer supports status=past)
+  // Cache for 10 minutes to reduce API calls and prevent rate limiting
   const response = await fetch(
-    `https://api.cal.com/v1/bookings?apiKey=${process.env.CALCOM_API_KEY}&status=${status}`,
-    { next: { revalidate: 60 } }
+    `https://api.cal.com/v1/bookings?apiKey=${process.env.CALCOM_API_KEY}&take=500`,
+    { next: { revalidate: 600 } }
   );
 
   if (!response.ok) {
-    console.error(`Cal.com API error for ${status}:`, await response.text());
-    return [];
+    console.error(`Cal.com API error:`, await response.text());
+    return { upcoming: [], past: [], cancelled: [] };
   }
 
   const data = await response.json();
-  return data.bookings || [];
+  const bookings = data.bookings || [];
+  const now = new Date();
+
+  // Separate bookings by status and time
+  const upcoming: CalcomBooking[] = [];
+  const past: CalcomBooking[] = [];
+  const cancelled: CalcomBooking[] = [];
+
+  for (const booking of bookings) {
+    const startTime = new Date(booking.startTime);
+
+    if (booking.status === 'CANCELLED') {
+      cancelled.push(booking);
+    } else if (startTime > now) {
+      upcoming.push(booking);
+    } else {
+      past.push(booking);
+    }
+  }
+
+  return { upcoming, past, cancelled };
 }
 
 // Fetch unique conversations from Supabase
@@ -218,18 +240,18 @@ export async function GET(request: NextRequest) {
 
     // Fetch all data in parallel
     const [
-      upcomingBookings,
-      pastBookings,
-      cancelledBookings,
+      calcomData,
       airtableRecords,
       supabaseData
     ] = await Promise.all([
-      getCalcomBookings('upcoming'),
-      getCalcomBookings('past'),
-      getCalcomBookings('cancelled'),
+      getCalcomBookings(),
       getAirtableRecords(),
       getSupabaseConversations()
     ]);
+
+    const upcomingBookings = calcomData.upcoming;
+    const pastBookings = calcomData.past;
+    const cancelledBookings = calcomData.cancelled;
 
     // Note: airtableRecords is fetched but no longer used for chat count (using Supabase instead)
     void airtableRecords; // Suppress unused variable warning
@@ -275,11 +297,13 @@ export async function GET(request: NextRequest) {
         date: new Date(b.startTime).toLocaleDateString('es-ES', {
           weekday: 'short',
           month: 'short',
-          day: 'numeric'
+          day: 'numeric',
+          timeZone: 'America/New_York',
         }),
         time: new Date(b.startTime).toLocaleTimeString('es-ES', {
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
+          timeZone: 'America/New_York',
         }),
         attendee: b.attendees?.[0]?.name || 'Sin nombre',
         status: b.rescheduled ? 'Reagendado' : 'Confirmado'

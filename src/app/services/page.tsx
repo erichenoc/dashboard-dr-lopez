@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import {
-  PieChart,
-  Pie,
-  Cell,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import {
   Stethoscope,
@@ -70,10 +71,16 @@ interface ServiceMetricsData {
 type SortField = 'service' | 'consultations' | 'linksSent' | 'bookingsConfirmed' | 'conversionRate';
 type SortDirection = 'asc' | 'desc';
 
+interface TrendData {
+  date: string;
+  consultas: number;
+}
+
 const CHART_COLORS = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#06B6D4', '#EC4899', '#84CC16', '#6366F1', '#14B8A6'];
 
 export default function ServicesPage() {
   const [data, setData] = useState<ServiceMetricsData | null>(null);
+  const [trendData, setTrendData] = useState<TrendData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,9 +92,23 @@ export default function ServicesPage() {
   const fetchData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
-      const response = await fetch('/api/service-metrics');
-      if (response.ok) {
-        setData(await response.json());
+      const [serviceRes, n8nRes] = await Promise.all([
+        fetch('/api/service-metrics'),
+        fetch('/api/n8n-metrics?period=30days')
+      ]);
+
+      if (serviceRes.ok) {
+        setData(await serviceRes.json());
+      }
+
+      if (n8nRes.ok) {
+        const n8nData = await n8nRes.json();
+        // Transform n8n data to trend format
+        const trend = n8nData.executionsByDay?.map((d: { date: string; success: number; error: number }) => ({
+          date: new Date(d.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'America/New_York' }),
+          consultas: d.success + d.error
+        })) || [];
+        setTrendData(trend);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -99,6 +120,13 @@ export default function ServicesPage() {
 
   useEffect(() => {
     fetchData();
+
+    // Auto-refresh every 60 seconds for real-time updates
+    const interval = setInterval(() => {
+      fetchData(false); // Silent refresh without showing spinner
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Filter and sort services
@@ -277,8 +305,10 @@ export default function ServicesPage() {
               <TrendingUp className="w-4 h-4 lg:w-5 lg:h-5 text-cyan-600" />
             </div>
             <div>
-              <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-300">Citas</p>
-              <p className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{data?.totals.totalBookings || 0}</p>
+              <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-300">Citas Cal.com</p>
+              <p className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
+                {data?.totals.totalBookings || <span className="text-gray-400 text-sm">Pendiente</span>}
+              </p>
             </div>
           </div>
         </div>
@@ -288,8 +318,12 @@ export default function ServicesPage() {
               <Percent className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
             </div>
             <div>
-              <p className="text-xs lg:text-sm text-blue-100">Conversión</p>
-              <p className="text-xl lg:text-2xl font-bold text-white">{data?.calcomStats?.overallConversionRate || 0}%</p>
+              <p className="text-xs lg:text-sm text-blue-100">Conversión Enlaces</p>
+              <p className="text-xl lg:text-2xl font-bold text-white">
+                {data?.totals?.totalConsultations
+                  ? Math.round((data.totals.totalLinksSent / data.totals.totalConsultations) * 100)
+                  : 0}%
+              </p>
             </div>
           </div>
         </div>
@@ -358,27 +392,26 @@ export default function ServicesPage() {
           )}
         </div>
 
-        {/* Pie Chart */}
+        {/* Trend Chart - Actividad de Consultas */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Distribución de Consultas</h3>
-          {pieChartData.length > 0 ? (
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tendencia de Actividad (30 días)</h3>
+          {trendData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={pieChartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={2}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                  labelLine={false}
-                >
-                  {pieChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
+              <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorConsultas" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10 }}
+                  stroke="#9CA3AF"
+                  interval="preserveStartEnd"
+                />
+                <YAxis tick={{ fontSize: 11 }} stroke="#9CA3AF" />
                 <Tooltip
                   formatter={(value: number) => [`${value} consultas`, 'Total']}
                   contentStyle={{
@@ -386,9 +419,18 @@ export default function ServicesPage() {
                     border: 'none',
                     borderRadius: '8px',
                     color: '#fff',
+                    fontSize: '12px',
                   }}
                 />
-              </PieChart>
+                <Area
+                  type="monotone"
+                  dataKey="consultas"
+                  stroke="#3B82F6"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorConsultas)"
+                />
+              </AreaChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-gray-400">

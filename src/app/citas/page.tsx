@@ -83,6 +83,7 @@ function BookingCard({
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
+                timeZone: 'America/New_York',
               })}
             </span>
           </div>
@@ -104,6 +105,7 @@ function BookingCard({
               {startDate.toLocaleTimeString('es-ES', {
                 hour: '2-digit',
                 minute: '2-digit',
+                timeZone: 'America/New_York',
               })}
             </span>
           </div>

@@ -52,7 +52,8 @@ export default function ReportsPage() {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'America/New_York',
     });
   };
 
@@ -358,7 +359,7 @@ export default function ReportsPage() {
       const withLink = conversationsData.conversations?.filter((c: { calLinkSent?: boolean }) => c.calLinkSent).length || 0;
 
       const doc = new jsPDF();
-      const currentMonth = new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+      const currentMonth = new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric', timeZone: 'America/New_York' });
 
       // Cover Page
       doc.setFillColor(59, 130, 246);
