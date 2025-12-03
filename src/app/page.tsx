@@ -454,7 +454,7 @@ export default function Dashboard() {
         {/* Activity Chart */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white">Actividad del Agente</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white">Actividad de Agente de WhatsApp</h3>
             <div className="flex items-center gap-1">
               {['7days', '30days'].map((p) => (
                 <button
