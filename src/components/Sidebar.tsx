@@ -34,7 +34,7 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Conversaciones', href: '/conversations', icon: MessageSquare },
   { name: 'Servicios', href: '/services', icon: Stethoscope },
-  { name: 'Citas', href: '/appointments', icon: Calendar },
+  { name: 'Citas', href: '/citas', icon: Calendar },
   { name: 'Clientes', href: '/clients', icon: Users },
   { name: 'Reportes', href: '/reports', icon: Download },
 ];
