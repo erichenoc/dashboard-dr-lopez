@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Sidebar from './Sidebar';
-import { Menu, X, Moon, Sun, Bell, MessageSquare, Calendar, Users, CheckCircle2 } from 'lucide-react';
+import { Menu, X, Moon, Sun, Bell, MessageSquare, Calendar, Users, CheckCircle2, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 
 interface Notification {
@@ -25,6 +26,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+      router.refresh();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   // Check for saved dark mode preference
   useEffect(() => {
@@ -280,6 +292,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               ) : (
                 <Moon className="w-5 h-5" />
               )}
+            </button>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
+              title="Cerrar sesión"
+            >
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </header>
