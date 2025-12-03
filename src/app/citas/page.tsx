@@ -241,6 +241,29 @@ export default function CitasPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Gestionar en Cal.com */}
+        <div className="bg-white rounded-xl shadow-md p-5 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-800 text-lg">Gestionar en Cal.com</h3>
+              <p className="text-gray-500 text-sm mt-1">
+                Para gestionar, crear o modificar citas, accede directamente a Cal.com
+              </p>
+            </div>
+            <a
+              href="https://app.cal.com/bookings/upcoming"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Abrir Cal.com
+            </a>
+          </div>
+        </div>
+
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">
           {(['all', 'upcoming', 'past', 'cancelled'] as const).map((status) => (
