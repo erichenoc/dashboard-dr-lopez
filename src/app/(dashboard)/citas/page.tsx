@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Plus, RefreshCw } from 'lucide-react';
+import RescheduleModal from '@/components/RescheduleModal';
+import CreateBookingModal from '@/components/CreateBookingModal';
 
 interface Booking {
   id: number;
@@ -18,14 +21,14 @@ interface Booking {
 function BookingCard({
   booking,
   onCancel,
+  onReschedule,
 }: {
   booking: Booking;
   onCancel: (id: number) => void;
+  onReschedule: (booking: Booking) => void;
 }) {
   const startDate = new Date(booking.startTime);
   const isUpcoming = booking.bookingStatus === 'upcoming';
-  const isPast = booking.bookingStatus === 'past';
-  const isCancelled = booking.bookingStatus === 'cancelled';
 
   const statusColors = {
     upcoming: 'bg-green-100 text-green-700',
@@ -112,14 +115,12 @@ function BookingCard({
         </div>
         {isUpcoming && (
           <div className="flex flex-col gap-2">
-            <a
-              href={`https://cal.com/booking/${booking.uid}?reschedule=true`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => onReschedule(booking)}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors text-center"
             >
               Reagendar
-            </a>
+            </button>
             <button
               onClick={() => onCancel(booking.id)}
               className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
@@ -141,6 +142,11 @@ export default function CitasPage() {
     'all'
   );
   const [cancelling, setCancelling] = useState<number | null>(null);
+
+  // Modal states
+  const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     fetchBookings();
@@ -180,6 +186,21 @@ export default function CitasPage() {
     } finally {
       setCancelling(null);
     }
+  }
+
+  function handleReschedule(booking: Booking) {
+    setSelectedBooking(booking);
+    setRescheduleModalOpen(true);
+  }
+
+  function handleRescheduleSuccess() {
+    alert('Cita reagendada correctamente');
+    fetchBookings();
+  }
+
+  function handleCreateSuccess() {
+    alert('Cita creada correctamente');
+    fetchBookings();
   }
 
   const filteredBookings =
@@ -241,27 +262,50 @@ export default function CitasPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Gestionar en Cal.com */}
+        {/* Action Buttons */}
         <div className="bg-white rounded-xl shadow-md p-5 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h3 className="font-semibold text-gray-800 text-lg">Gestionar en Cal.com</h3>
+              <h3 className="font-semibold text-gray-800 text-lg">Acciones Rapidas</h3>
               <p className="text-gray-500 text-sm mt-1">
-                Para gestionar, crear o modificar citas, accede directamente a Cal.com
+                Crea, reagenda o cancela citas directamente desde aqui
               </p>
             </div>
-            <a
-              href="https://cal.com/arnaldo-lopez/dr-arnaldo-lopez"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              Abrir Cal.com
-            </a>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => setCreateModalOpen(true)}
+                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                Nueva Cita
+              </button>
+              <button
+                onClick={fetchBookings}
+                className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-all flex items-center gap-2"
+              >
+                <RefreshCw className="w-5 h-5" />
+                Actualizar
+              </button>
+              <a
+                href="https://cal.com/arnaldo-lopez/dr-arnaldo-lopez"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Abrir Cal.com
+              </a>
+            </div>
           </div>
+        </div>
+
+        {/* Info Banner */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+          <p className="text-blue-800 text-sm">
+            <strong>Sincronizacion automatica:</strong> Todas las citas creadas, reagendadas o canceladas desde aqui se sincronizan automaticamente con Cal.com en tiempo real.
+          </p>
         </div>
 
         {/* Filters */}
@@ -288,6 +332,14 @@ export default function CitasPage() {
         {filteredBookings.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             <p className="text-gray-500">No hay citas en esta categoria</p>
+            {filter === 'upcoming' && (
+              <button
+                onClick={() => setCreateModalOpen(true)}
+                className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+              >
+                Crear primera cita
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -296,11 +348,31 @@ export default function CitasPage() {
                 key={booking.id}
                 booking={booking}
                 onCancel={handleCancel}
+                onReschedule={handleReschedule}
               />
             ))}
           </div>
         )}
       </main>
+
+      {/* Modals */}
+      {selectedBooking && (
+        <RescheduleModal
+          booking={selectedBooking}
+          isOpen={rescheduleModalOpen}
+          onClose={() => {
+            setRescheduleModalOpen(false);
+            setSelectedBooking(null);
+          }}
+          onSuccess={handleRescheduleSuccess}
+        />
+      )}
+
+      <CreateBookingModal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSuccess={handleCreateSuccess}
+      />
     </div>
   );
 }
