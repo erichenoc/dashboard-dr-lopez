@@ -3,11 +3,24 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, startTime, eventTypeId, notes, phone } = body;
+    const {
+      name,
+      lastName,
+      email,
+      phone,
+      dateOfBirth,
+      hasInsurance,
+      address,
+      services,
+      notes,
+      startTime,
+      eventTypeId
+    } = body;
 
-    if (!name || !email || !startTime) {
+    // Validate required fields
+    if (!name || !lastName || !email || !phone || !dateOfBirth || !hasInsurance || !address || !startTime) {
       return NextResponse.json(
-        { error: 'nombre, email y horario son requeridos' },
+        { error: 'Todos los campos obligatorios son requeridos' },
         { status: 400 }
       );
     }
@@ -38,6 +51,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Build responses object matching Cal.com custom fields
+    // Format: name field uses "name" (full name = first + last)
+    const fullName = `${name} ${lastName}`;
+
+    // Compile notes with all additional info
+    const compiledNotes = [
+      notes || '',
+      `Fecha de Nacimiento: ${dateOfBirth}`,
+      `Seguro Médico: ${hasInsurance}`,
+      `Dirección: ${address}`,
+      services ? `Servicios: ${services}` : '',
+    ].filter(Boolean).join('\n');
+
     // Create the booking
     const response = await fetch(
       `https://api.cal.com/v1/bookings?apiKey=${apiKey}`,
@@ -50,15 +76,26 @@ export async function POST(request: Request) {
           eventTypeId: parseInt(eventId),
           start: startTime,
           responses: {
-            name,
+            name: fullName,
             email,
-            notes: notes || '',
             phone: phone || '',
+            notes: compiledNotes,
+            // Cal.com custom fields (if configured in event type)
+            lastName: lastName,
+            dateOfBirth: dateOfBirth,
+            hasInsurance: hasInsurance,
+            address: address,
+            services: services || '',
           },
           timeZone: 'America/New_York',
           language: 'es',
           metadata: {
             source: 'dashboard',
+            lastName,
+            dateOfBirth,
+            hasInsurance,
+            address,
+            services: services || '',
           },
         }),
       }
